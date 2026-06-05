@@ -1,0 +1,8 @@
+{
+  "fecha_generacion": "2026-06-05T16:05:24.937163",
+  "validaciones": {
+    "precipitacion_chi2": {
+      "test": "Chi-cuadrada",
+      "estadistico": 649.24,
+      "p_valor": 0.0,
+      "aceptada": 
