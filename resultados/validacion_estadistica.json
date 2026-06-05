@@ -1,8 +1,48 @@
 {
-  "fecha_generacion": "2026-06-05T16:17:50.060164",
+  "fecha_generacion": "2026-06-05T16:24:38.138332",
   "validaciones": {
     "precipitacion_chi2": {
       "test": "Chi-cuadrada",
       "estadistico": 649.24,
       "p_valor": 0.0,
-      "aceptada": 
+      "aceptada": false,
+      "nombre": "precipitacion"
+    },
+    "precipitacion_ks": {
+      "test": "Kolmogorov-Smirnov",
+      "distribucion": "gamma",
+      "estadistico": 0.02049322876791354,
+      "p_valor": 0.9818982366871793,
+      "aceptada": true,
+      "nombre": "precipitacion"
+    },
+    "5_autocorr": [
+      {
+        "lag": 1,
+        "correlacion": 0.0177116475086101,
+        "independiente": true
+      },
+      {
+        "lag": 2,
+        "correlacion": -0.06985002078332546,
+        "independiente": true
+      },
+      {
+        "lag": 3,
+        "correlacion": -0.0640107272936551,
+        "independiente": true
+      },
+      {
+        "lag": 4,
+        "correlacion": -0.023116207692147527,
+        "independiente": true
+      },
+      {
+        "lag": 5,
+        "correlacion": 0.1253497416771719,
+        "independiente": false
+      }
+    ]
+  },
+  "conclusion": "Revisar algunos tests"
+}
