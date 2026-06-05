@@ -27,6 +27,18 @@ from typing import List, Dict, Tuple
 from datetime import datetime, timedelta
 import json
 
+
+def _convertir_a_json(obj):
+    """Convierte escalares de NumPy a tipos nativos de Python para json.dump."""
+    if isinstance(obj, dict):
+        return {k: _convertir_a_json(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_convertir_a_json(v) for v in obj]
+    if isinstance(obj, np.generic):
+        return obj.item()
+    return obj
+
+
 # ===============================================================================
 # UNIDAD 5: GENERACIÓN Y VALIDACIÓN DE NÚMEROS ALEATORIOS
 # ===============================================================================
@@ -572,7 +584,7 @@ def main():
     # Reporte de validación
     reporte = generador.generar_reporte_validacion()
     with open('./resultados/validacion_estadistica.json', 'w') as f:
-        json.dump(reporte, f, indent=2)
+        json.dump(_convertir_a_json(reporte), f, indent=2)
     print("✓ Reporte de validación guardado en 'validacion_estadistica.json'")
 
     print("\n" + "=" * 80)
