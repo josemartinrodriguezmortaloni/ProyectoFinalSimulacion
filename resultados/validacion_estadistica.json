@@ -1,5 +1,5 @@
 {
-  "fecha_generacion": "2026-06-05T16:24:38.138332",
+  "fecha_generacion": "2026-06-05T17:00:48.642045",
   "validaciones": {
     "precipitacion_chi2": {
       "test": "Chi-cuadrada",
@@ -16,15 +16,15 @@
       "aceptada": true,
       "nombre": "precipitacion"
     },
-    "5_autocorr": [
+    "precipitacion_autocorr": [
       {
         "lag": 1,
-        "correlacion": 0.0177116475086101,
+        "correlacion": 0.017711647508610085,
         "independiente": true
       },
       {
         "lag": 2,
-        "correlacion": -0.06985002078332546,
+        "correlacion": -0.06985002078332544,
         "independiente": true
       },
       {
@@ -34,12 +34,12 @@
       },
       {
         "lag": 4,
-        "correlacion": -0.023116207692147527,
+        "correlacion": -0.023116207692147582,
         "independiente": true
       },
       {
         "lag": 5,
-        "correlacion": 0.1253497416771719,
+        "correlacion": 0.12534974167717192,
         "independiente": false
       }
     ]
