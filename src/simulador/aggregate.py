@@ -45,9 +45,34 @@ class SimulacionHidrica:
         self.series = SeriesClimaticas(
             precipitacion=self.generador.generar_precipitacion_anual(n_años=n),
             fusion=self.generador.generar_fusion_nival(n_años=n),
+            afluente=self.generador.generar_afluentes_mensuales(n_años=n),
             demanda=self.generador.generar_demanda_agricola(n_años=n),
             temperatura=self.generador.generar_temperatura_mensual(n_años=n),
         )
+
+        # Mostrar ejemplo de volumen generado en el primer mes del primer año
+        print("\n=== EJEMPLO DE CÁLCULO DE VOLÚMENES MENSUALES - DIQUE POTRERILLOS ===")
+        AREA_CUENCA_M2 = 5_600_000_000  # 5.600 km2 en m2
+        SEGUNDOS_MES = 2_592_000
+
+        # Asumimos que lluvia y nieve se distribuyen parejo en los 12 meses para el mes de muestra
+        lluvia_mm_mes = self.series.precipitacion[0] / 12
+        nieve_mm_mes = self.series.fusion[0] / 12
+        caudal_m3s = self.series.afluente[0, 0]
+
+        vol_lluvia_m3 = (lluvia_mm_mes / 1000.0) * AREA_CUENCA_M2
+        vol_nieve_m3 = (nieve_mm_mes / 1000.0) * AREA_CUENCA_M2
+        vol_afluente_m3 = caudal_m3s * SEGUNDOS_MES
+        vol_total_m3 = vol_lluvia_m3 + vol_nieve_m3 + vol_afluente_m3
+
+        print(f"Lluvia (mm) mes: {lluvia_mm_mes:.2f}")
+        print(f"Nieve (mm) mes: {nieve_mm_mes:.2f}")
+        print(f"Afluente (m³/s): {caudal_m3s:.2f}")
+        print("-" * 40)
+        print(f"Volumen Lluvia: {vol_lluvia_m3:,.2f} m³")
+        print(f"Volumen Nieve: {vol_nieve_m3:,.2f} m³")
+        print(f"Volumen Afluente: {vol_afluente_m3:,.2f} m³")
+        print(f"==> VOLUMEN TOTAL INGRESADO (MES): {vol_total_m3:,.2f} m³\n")
 
         precipitacion = self.series.precipitacion
 

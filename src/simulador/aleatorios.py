@@ -31,6 +31,12 @@ class GeneradorNumerosAleatorios:
         fusion = np.random.normal(base_mm, desv_mm, n_años)
         return np.clip(fusion, 50, 300)
 
+    def generar_afluentes_mensuales(
+        self, n_años: int = 500, media_m3s: float = 30, desv_m3s: float = 10
+    ) -> np.ndarray:
+        afluentes = np.random.normal(media_m3s, desv_m3s, (n_años, 12))
+        return np.maximum(afluentes, 0)
+
     def generar_demanda_agricola(
         self, n_años: int = 500, media_hm3_mes: float = 250
     ) -> np.ndarray:

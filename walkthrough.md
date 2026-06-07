@@ -8,7 +8,11 @@
 - Se resolvieron los conflictos de Git y se actualizó la rama local.
 
 ## Verificación
-- El script de simulación completó exitosamente las tres fases de operación (Validación de Aleatoriedad, Simulación de 500 años y Análisis de Resultados).
+- El# Resumen de Implementación
+- Se modificó `aleatorios.py` para generar afluentes (m³/s).
+- Se actualizó `models.py` agregando `afluente` a `SeriesClimaticas`.
+- Se implementó la conversión a volumen en `aggregate.py` utilizando 5.600 km² de área y 2.592.000 segundos.
+- Se agregó el print en la FASE 1 para mostrar el volumen mensual entrante total al Dique Potrerillos. (Validación de Aleatoriedad, Simulación de 500 años y Análisis de Resultados).
 - Generación exitosa de los artefactos del programa (`resultados_simulacion.csv` y `validacion_estadistica.json`).
 
 > [!TIP]

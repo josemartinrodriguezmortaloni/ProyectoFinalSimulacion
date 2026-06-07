@@ -21,6 +21,7 @@ class SeriesClimaticas:
     """Series hidrológicas generadas para toda la campaña."""
     precipitacion: np.ndarray
     fusion: np.ndarray
+    afluente: np.ndarray
     demanda: np.ndarray
     temperatura: np.ndarray
 
