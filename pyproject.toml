@@ -8,6 +8,7 @@ dependencies = [
     "matplotlib>=3.10.9",
     "numpy>=2.4.6",
     "pandas>=3.0.3",
+    "pysd>=3.14.3",
     "scipy>=1.17.1",
     "seaborn>=0.13.2",
 ]
@@ -21,3 +22,8 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/simulador"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3",
+]

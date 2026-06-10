@@ -172,7 +172,9 @@ class SimulacionHidrica:
         )
 
         print("\n✓ Resultados guardados en 'resultados/resultados_simulacion.csv'")
-        print("✓ Reporte de validación guardado en 'resultados/validacion_estadistica.json'")
+        print(
+            "✓ Reporte de validación guardado en 'resultados/validacion_estadistica.json'"
+        )
 
         print("\n" + "=" * 80)
         print("PROYECTO COMPLETO")
