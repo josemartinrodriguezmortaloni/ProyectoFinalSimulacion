@@ -1,0 +1,949 @@
+{UTF-8}
+Agua Del Toro Altura=Agua Del Toro Cota Min+(Agua Del Toro Volumen Embalse/Agua Del Toro hm3 por metro\
+		)
+	~	m
+	~	Altura actual de la lámina de agua. A mayor altura, mayor potencia genera \
+		la turbina (la energía es proporcional a la altura de caída).
+	|
+
+Agua Del Toro Cap Max=380
+	~	hm3
+	~	Capacidad máxima del embalse Agua Del Toro.
+	|
+
+Agua Del Toro Consumo Urbano=3
+	~	hm3/mes
+	~	Consumo urbano de General Alvear y zona del Diamante.
+	|
+
+Agua Del Toro Cota Min=1505
+	~	m
+	~	Cota mínima operacional del embalse (metros sobre el nivel del mar). \
+		Embalse de alta montaña sobre el Río Diamante.
+	|
+
+Agua Del Toro Demanda Riego = WITH LOOKUP (Mes Actual,
+		([(0,60)-(11,210)],
+		   (0,180),(1,198),(2,189),(3,126),(4,72),(5,63),
+		   (6,63),(7,90),(8,144),(9,180),(10,207),(11,189)))
+	~	hm3/mes
+	~	Demanda estacional de riego del oasis del Tunuyán (zona Este de Mendoza, \
+		viticultura y fruticultura).
+	|
+
+Agua Del Toro Disponible=MAX ( 0 , Agua Del Toro Volumen Embalse - Agua Del Toro Vol Min\
+		 )
+	~	hm3
+	~	Agua realmente disponible para erogar (total menos el volumen muerto). \
+		Garantiza que el embalse nunca quede completamente vacío.
+	|
+
+Agua Del Toro Entrada Agua=65
+	~	
+	~		|
+
+Agua Del Toro Evaporacion=Tasa Evap Mensual*0.6
+	~	hm3/mes
+	~	Pérdida por evaporación superficial. Factor 0.6 por alta altitud (menor \
+		temperatura real que el promedio de Mendoza).
+	|
+
+Agua Del Toro Generacion GWh=Agua Del Toro Salida Energia* 0.00981 * (Agua Del Toro Altura\
+		 - Agua Del Toro Cota Min) / 1000
+	~	GWh/mes
+	~	Energía generada mensualmente. Fórmula hidráulica: Potencia [kW] = 9.81 \
+		× Q[m³/s] × H[m]. Convertida a GWh.Alta montaña = mayor altura de \
+		caída = más eficiencia energética.
+	|
+
+Agua Del Toro hm3 por metro=2.96
+	~	hm3/m
+	~	Relación volumen-altura.
+	|
+
+Agua Del Toro Porcentaje Capacidad=Agua Del Toro Volumen Embalse/Agua Del Toro Cap Max
+	~	dmnl
+	~	Porcentaje de llenado (0 a 1). Es la variable de entrada del algoritmo de \
+		decisión. Cuando es bajo, priorizar riego; cuando es alto, priorizar \
+		energía.
+	|
+
+Agua Del Toro Prioridad Energia=IF THEN ELSE(Agua Del Toro Porcentaje Capacidad > 0.8\
+		, 0.5,
+	  IF THEN ELSE(Agua Del Toro Porcentaje Capacidad < 0.4, 0.1, 0.35))
+	~	dmnl
+	~	Embalse > 80% → balance con algo de energía (0.50)
+		Embalse entre 40% y 80% → balance moderado (0.35)
+		Embalse < 40% → prioridad al riego (0.10)
+		Valores similares al Nihuil: sirve a 81.400 ha de cultivos mixtos (35% \
+		viñas, 41% frutales).
+	|
+
+Agua Del Toro Salida Energia=MAX ( 0 , MIN ( Agua Del Toro Disponible-Agua Del Toro Salida Riego\
+		 , Agua Del Toro Disponible*Agua Del Toro Prioridad Energia )  )
+	~	hm3/mes
+	~		|
+
+Agua Del Toro Salida Riego=MIN ( Agua Del Toro Demanda Riego , MAX ( 0 , Agua Del Toro Disponible\
+		*(1-Agua Del Toro Prioridad Energia ) ) )
+	~	hm3/mes
+	~		|
+
+Agua Del Toro Satisfaccion Riego=Agua Del Toro Salida Riego/MAX ( 0.01 , Agua Del Toro Demanda Riego\
+		 )
+	~	dmnl
+	~	Fracción de la demanda de riego satisfecha. 1.0 = todos los agricultores \
+		reciben toda el agua que necesitan. Valores < 0.7 indican situación \
+		crítica para el sector agropecuario.
+	|
+
+Agua Del Toro Vol Inicial=240
+	~	hm3
+	~	Volumen al inicio de la simulación
+	|
+
+Agua Del Toro Vol Min=40
+	~	hm3
+	~	Volumen mínimo operacional (muerto). No se puede erogar por debajo de \
+		este nivel.
+	|
+
+Agua Del Toro Volumen Embalse= INTEG (Agua Del Toro Entrada Agua-Agua Del Toro Consumo Urbano\
+		-Agua Del Toro Evaporacion-Agua Del Toro Salida Energia-Agua Del Toro Salida Riego,
+		Agua Del Toro Vol Inicial)
+	~	hm3
+	~	Volumen de agua almacenado en Agua Del Toro en cada instante de la \
+		simulación. Aumenta únicamente con Pot_Entrada (que viene del CSV de \
+		Python). Disminuye por las 4 salidas. Es el corazón del modelo para este \
+		embalse.
+	|
+
+Carrizal Altura=Carrizal Cota Min+(Carrizal Volumen Embalse/Carrizal hm3 por metro)
+	~	m
+	~	Altura actual de la lámina de agua. A mayor altura, mayor potencia genera \
+		la turbina (la energía es proporcional a la altura de caída).
+	|
+
+Carrizal Cap Max=195
+	~	hm3
+	~	Capacidad máxima del embalse Carrizal.
+	|
+
+Carrizal Consumo Urbano=2
+	~	hm3/mes
+	~	Consumo urbano de Tunuyán y alrededores.
+	|
+
+Carrizal Cota Min=855
+	~	m
+	~	Cota mínima operacional del embalse (metros sobre el nivel del mar).
+	|
+
+Carrizal Demanda Riego = WITH LOOKUP (Mes Actual,
+		([(0,40)-(11,145)],
+		   (0,120),(1,132),(2,126),(3,84),(4,48),(5,42),
+		   (6,42),(7,60),(8,96),(9,120),(10,138),(11,126)))
+	~	hm3/mes
+	~	Demanda estacional de riego del oasis del Tunuyán (zona Este de Mendoza, \
+		viticultura y fruticultura).
+	|
+
+Carrizal Disponible=MAX ( 0 , Carrizal Volumen Embalse - Carrizal Vol Min )
+	~	hm3
+	~	Agua realmente disponible para erogar (total menos el volumen muerto). \
+		Garantiza que el embalse nunca quede completamente vacío.
+	|
+
+Carrizal Entrada Agua=45
+	~	
+	~		|
+
+Carrizal Evaporacion=Tasa Evap Mensual*0.8
+	~	hm3/mes
+	~	Pérdida por evaporación superficial. Factor 0.8 por superficie menor del \
+		Carrizal.
+	|
+
+Carrizal Generacion GWh=Carrizal Salida Energia* 0.00981 * (Carrizal Altura - Carrizal Cota Min\
+		) / 1000
+	~	GWh/mes
+	~	Energía generada mensualmente. Fórmula hidráulica: Potencia [kW] = 9.81 \
+		× Q[m³/s] × H[m]. Convertida a GWh.
+	|
+
+Carrizal hm3 por metro=1.52
+	~	hm3/m
+	~	Relación volumen-altura.
+	|
+
+Carrizal Porcentaje Capacidad=Carrizal Volumen Embalse/Carrizal Cap Max
+	~	dmnl
+	~	Porcentaje de llenado (0 a 1). Es la variable de entrada del algoritmo de \
+		decisión. Cuando es bajo, priorizar riego; cuando es alto, priorizar \
+		energía.
+	|
+
+Carrizal Prioridad Energia=IF THEN ELSE(Carrizal Porcentaje Capacidad > 0.8, 0.3,
+	  IF THEN ELSE(Carrizal Porcentaje Capacidad < 0.4, 0.05, 0.2))
+	~	dmnl
+	~	Embalse > 80% → puede ceder algo a energía (0.30)
+		Embalse entre 40% y 80% → preferencia por riego (0.20)
+		Embalse < 40% → casi todo para riego (0.05)
+		El Carrizal tiene los valores más bajos de prioridad energética porque \
+		abastece 4.302 km de canales de riego agrícola del oasis del Tunuyán.
+	|
+
+Carrizal Salida Energia=MAX ( 0 , MIN ( Carrizal Disponible-Carrizal Salida Riego , Carrizal Disponible\
+		*Carrizal Prioridad Energia )  )
+	~	hm3/mes
+	~	Agua turbinada en la central hidroeléctrica de Potrerillos (315 MW \
+		instalados). Es lo que queda disponible después de satisfacer riego, \
+		limitado por la fracción de prioridad energética.
+	|
+
+Carrizal Salida Riego=MIN ( Carrizal Demanda Riego , MAX ( 0 , Carrizal Disponible*(1\
+		-Carrizal Prioridad Energia ) ) )
+	~	hm3/mes
+	~		|
+
+Carrizal Satisfaccion Riego=Carrizal Salida Riego/MAX ( 0.01 , Carrizal Demanda Riego\
+		 )
+	~	dmnl
+	~	Fracción de la demanda de riego satisfecha. 1.0 = todos los agricultores \
+		reciben toda el agua que necesitan. Valores < 0.7 indican situación \
+		crítica para el sector agropecuario.
+	|
+
+Carrizal Vol Inicial=120
+	~	hm3
+	~	Volumen al inicio de la simulación
+	|
+
+Carrizal Vol Min=20
+	~	hm3
+	~	Volumen mínimo operacional (muerto). No se puede erogar por debajo de \
+		este nivel.
+	|
+
+Carrizal Volumen Embalse= INTEG (Carrizal Entrada Agua-Carrizal Consumo Urbano-Carrizal Evaporacion\
+		-Carrizal Salida Energia-Carrizal Salida Riego,
+		Carrizal Vol Inicial)
+	~	hm3
+	~	Volumen de agua almacenado en Carrizal en cada instante de la simulación. \
+		Aumenta únicamente con Pot_Entrada (que viene del CSV de Python). \
+		Disminuye por las 4 salidas. Es el corazón del modelo para este embalse.
+	|
+
+Consumo Urbano Potrerillos=8
+	~	hm3/mes
+	~	Agua potable para el Gran Mendoza (Capital, Godoy Cruz, Guaymallén, Las \
+		Heras, Maipú). Constante: 8 hm³/mes ≈ 96 hm³/año.
+	|
+
+Conviene Energia=IF THEN ELSE(Decision Sistema >= 0.5, 1, 0)
+	~	dmnl
+	~	dmnl (1=sí · 0=no)
+		Vale 1 cuando la respuesta es "priorizar la energía". Siempre \
+		complementario a Conviene_Riego: uno vale 1 y el otro vale 0.
+	|
+
+Conviene Riego=IF THEN ELSE (Decision Sistema < 0.5, 1, 0)
+	~	dmnl
+	~	dmnl (1=sí · 0=no)
+		Vale 1 cuando la respuesta a la pregunta de investigación es "priorizar \
+		el riego". Directamente legible en el gráfico de resultados.
+	|
+
+Crisis Hidrica=IF THEN ELSE ( Total Porcentaje de Llenado Completo<0.3 , 1 , 0 )
+	~	dmnl
+	~	dmnl (0=normal, 1=crisis)
+		Se activa cuando el sistema cae por debajo del 30% de su capacidad total. \
+		Permite contar cuántos meses de crisis ocurren en los años simulados.
+	|
+
+Decision Sistema=IF THEN ELSE(Total Porcentaje de Llenado Completo < 0.3, 0,
+	  IF THEN ELSE(Total Porcentaje de Llenado Completo < 0.5, 0.25,
+	  IF THEN ELSE(Total Porcentaje de Llenado Completo < 0.7, 0.5, 0.8)))
+	~	dmnl
+	~	Responde directamente la pregunta de investigación según el estado del sistema:
+		
+		0.00 → Sistema en crisis: TODO para riego, suspender energía
+		0.25 → Sistema en alerta: preferencia fuerte por riego
+		0.50 → Sistema normal: balance equitativo
+		0.80 → Sistema holgado: priorizar energía (genera ingresos)
+	|
+
+Eficiencia Riego=0.6
+	~	
+	~		|
+
+Entrada Agua Potrerillos=135
+	~	
+	~		|
+
+Evaporacion Potrerillos=Tasa Evap Mensual*1.4
+	~	hm3/mes
+	~	Pérdida por evaporación superficial. El factor 1.4 refleja que \
+		Potrerillos tiene el espejo de agua más grande del sistema ( 28 km² a \
+		plena capacidad).
+	|
+
+Mes Actual=MODULO ( Time , 12 )
+	~	Month
+	~	Devuelve el mes actual (0=Enero, 1=Feb, ..., 11=Dic). Es la clave para \
+		tablas estacionales.
+	|
+
+Nihuil Altura=Nihuil Cota Min+(Nihuil Volumen Embalse/Nihuil hm3 por metro)
+	~	m
+	~	Altura actual de la lámina de agua. A mayor altura, mayor potencia genera \
+		la turbina (la energía es proporcional a la altura de caída).
+	|
+
+Nihuil Cap Max=320
+	~	hm3
+	~	Capacidad máxima del embalse Nihuil.
+	|
+
+Nihuil Consumo Urbano =2
+	~	hm3/mes
+	~	Consumo urbano de San Rafael (zona Atuel).
+	|
+
+Nihuil Cota Min=1348
+	~	m
+	~	Cota mínima operacional del embalse (metros sobre el nivel del mar).
+	|
+
+Nihuil Demanda Riego = WITH LOOKUP (Mes Actual,
+		([(0,40)-(11,155)],
+		   (0,130),(1,143),(2,136),(3,91),(4,52),(5,45),
+		   (6,45),(7,65),(8,104),(9,130),(10,149),(11,136)))
+	~	hm3/mes
+	~	Demanda estacional de riego del oasis del Atuel (San Rafael). Cultivos \
+		mixtos de viñedos y frutales en la zona sur de Mendoza.
+	|
+
+Nihuil Disponible=MAX ( 0 , Nihuil Volumen Embalse - Nihuil Vol Min )
+	~	hm3
+	~	Agua realmente disponible para erogar (total menos el volumen muerto). \
+		Garantiza que el embalse nunca quede completamente vacío.
+	|
+
+Nihuil Entrada Agua=55
+	~	
+	~		|
+
+Nihuil Evaporacion=Tasa Evap Mensual*0.9
+	~	hm3/mes
+	~	Pérdida por evaporación superficial. Factor 0.9 por superficie \
+		intermedia del Nihuil.
+	|
+
+Nihuil Generacion GWh=Nihuil Salida Energia* 0.00981 * (Nihuil Altura - Nihuil Cota Min\
+		) / 1000
+	~	GWh/mes
+	~	Energía generada mensualmente. Fórmula hidráulica: Potencia [kW] = 9.81 \
+		× Q[m³/s] × H[m]. Convertida a GWh.
+	|
+
+Nihuil hm3 por metro=3.2
+	~	hm3/m
+	~	Relación volumen-altura.
+	|
+
+Nihuil Porcentaje Capacidad=Nihuil Volumen Embalse/Nihuil Cap Max
+	~	dmnl
+	~	Porcentaje de llenado (0 a 1). Es la variable de entrada del algoritmo de \
+		decisión. Cuando es bajo, priorizar riego; cuando es alto, priorizar \
+		energía.
+	|
+
+Nihuil Prioridad Energia=IF THEN ELSE(Nihuil Porcentaje Capacidad > 0.8, 0.5,
+	  IF THEN ELSE(Nihuil Porcentaje Capacidad < 0.4, 0.1, 0.35))
+	~	dmnl
+	~	Embalse > 80% → balance moderado con algo de energía (0.50)
+		Embalse entre 40% y 80% → ligera preferencia por riego (0.35)
+		Embalse < 40% → prioridad al riego (0.10)
+		El Nihuil tiene valores intermedios porque sirve a agricultores del Atuel \
+		pero también genera energía.
+	|
+
+Nihuil Salida Energia=MAX ( 0 , MIN ( Nihuil Disponible-Nihuil Salida Riego , Nihuil Disponible\
+		*Nihuil Prioridad Energia )  )
+	~	hm3/mes
+	~	Agua turbinada en la central hidroeléctrica de Potrerillos (315 MW \
+		instalados). Es lo que queda disponible después de satisfacer riego, \
+		limitado por la fracción de prioridad energética.
+	|
+
+Nihuil Salida Riego=MIN ( Nihuil Demanda Riego , MAX ( 0 , Nihuil Disponible*(1-Nihuil Prioridad Energia\
+		 ) ) )
+	~	hm3/mes
+	~		|
+
+Nihuil Satisfaccion Riego=Nihuil Salida Riego/MAX ( 0.01 , Nihuil Demanda Riego )
+	~	dmnl
+	~	Fracción de la demanda de riego satisfecha. 1.0 = todos los agricultores \
+		reciben toda el agua que necesitan. Valores < 0.7 indican situación \
+		crítica para el sector agropecuario.
+	|
+
+Nihuil Vol Inicial=200
+	~	hm3
+	~	Volumen al inicio de la simulación
+	|
+
+Nihuil Vol Min=100
+	~	hm3
+	~	Volumen mínimo operacional (muerto). No se puede erogar por debajo de \
+		este nivel.
+	|
+
+Nihuil Volumen Embalse= INTEG (Nihuil Entrada Agua-Nihuil Consumo Urbano-Nihuil Evaporacion\
+		-Nihuil Salida Energia-Nihuil Salida Riego,
+		Nihuil Vol Inicial)
+	~	hm3
+	~	Volumen de agua almacenado en Nihuil en cada instante de la simulación. \
+		Aumenta únicamente con Pot_Entrada (que viene del CSV de Python). \
+		Disminuye por las 4 salidas. Es el corazón del modelo para este embalse.
+	|
+
+Potrerillos Altura=Potrerillos Cota Min+(Volumen Embalse Potrerillos/Potrerillos hm3 por metro\
+		)
+	~	m
+	~	Altura actual de la lámina de agua. A mayor altura, mayor potencia genera \
+		la turbina (la energía es proporcional a la altura de caída).
+	|
+
+Potrerillos Cap Max=1885
+	~	hm3
+	~	Capacidad máxima del embalse Potrerillos.
+	|
+
+Potrerillos Cota Min=970
+	~	m
+	~	Cota mínima operacional del embalse (metros sobre el nivel del mar).
+	|
+
+Potrerillos Demanda Riego = WITH LOOKUP (Mes Actual,
+		([(0,80)-(11,300)],
+		   (0,250),(1,275),(2,262),(3,175),(4,100),(5,87),
+		   (6,87),(7,125),(8,200),(9,250),(10,287),(11,262)))
+	~	hm3/mes
+	~	Demanda estacional de riego del oasis norte (Lavalle, Las Heras, Maipú, \
+		Luján de Cuyo, Godoy Cruz). Máxima en verano (cultivos en crecimiento), \
+		mínima en invierno. Esta tabla es DETERMINÍSTICA — la aleatoriedad de \
+		la oferta viene de Python, la demanda sigue un patrón conocido.
+	|
+
+Potrerillos Disponible=MAX ( 0 , Volumen Embalse Potrerillos - Potrerillos Vol Min )
+	~	hm3
+	~	Agua realmente disponible para erogar (total menos el volumen muerto). \
+		Garantiza que el embalse nunca quede completamente vacío.
+	|
+
+Potrerillos Generacion GWh=Salida Energia Potrerillos* 0.00981 * (Potrerillos Altura \
+		- Potrerillos Cota Min) / 1000
+	~	GWh/mes
+	~	Energía generada mensualmente. Fórmula hidráulica: Potencia [kW] = 9.81 \
+		× Q[m³/s] × H[m]. Convertida a GWh. A plena capacidad Potrerillos puede \
+		generar  220 GWh/mes.
+	|
+
+Potrerillos hm3 por metro=7.86
+	~	hm3/m
+	~	Relación volumen-altura.
+	|
+
+Potrerillos Porcentaje Capacidad=Volumen Embalse Potrerillos/Potrerillos Cap Max
+	~	dmnl
+	~	Porcentaje de llenado (0 a 1). Es la variable de entrada del algoritmo de \
+		decisión. Cuando es bajo, priorizar riego; cuando es alto, priorizar \
+		energía.
+	|
+
+Potrerillos Prioridad Energia=IF THEN ELSE(Potrerillos Porcentaje Capacidad > 0.8, 0.8\
+		,
+	  IF THEN ELSE(Potrerillos Porcentaje Capacidad < 0.4, 0.15, 0.5))
+	~	dmnl
+	~	Embalse > 80% → priorizar energía fuertemente (0.80)
+		Embalse entre 40% y 80% → balance (0.50)
+		Embalse < 40% → priorizar riego urgentemente (0.15)
+		Potrerillos tiene los valores más altos porque es la principal fuente \
+		hidroeléctrica de Mendoza.
+	|
+
+Potrerillos Satisfaccion Riego=Salida Riego Potre/MAX ( 0.01 , Potrerillos Demanda Riego\
+		 )
+	~	dmnl
+	~	Fracción de la demanda de riego satisfecha. 1.0 = todos los agricultores \
+		reciben toda el agua que necesitan. Valores < 0.7 indican situación \
+		crítica para el sector agropecuario.
+	|
+
+Potrerillos Vol Inicial=1200
+	~	hm3
+	~	Volumen al inicio de la simulación
+	|
+
+Potrerillos Vol Min=100
+	~	hm3
+	~	olumen mínimo operacional (muerto). No se puede erogar por debajo de este \
+		nivel.
+	|
+
+Precio MWh=80
+	~	
+	~	Precio promedio de venta de energía eléctrica en el mercado mayorista \
+		argentino
+	|
+
+Salida Energia Potrerillos=MAX ( 0 , MIN ( Potrerillos Disponible-Salida Riego Potre \
+		, Potrerillos Disponible*Potrerillos Prioridad Energia
+	 )  )
+	~	hm3/mes
+	~	Agua turbinada en la central hidroeléctrica de Potrerillos (315 MW \
+		instalados). Es lo que queda disponible después de satisfacer riego, \
+		limitado por la fracción de prioridad energética.
+	|
+
+Salida Riego Potre=MIN ( Potrerillos Demanda Riego , MAX ( 0 , Potrerillos Disponible\
+		*(1-Potrerillos Prioridad Energia )
+	 ) )
+	~	
+	~		|
+
+Tasa Evap Mensual=MAX ( 0 , (Temperatura Actual-5)*0.05 )
+	~	hm3/mes
+	~	 Evaporación base del sistema. Mendoza tiene clima árido con alta \
+		evapotranspiración potencial. A 25°C: (25-5)*0.05 = 1 hm³/mes por \
+		embalse.
+	|
+
+Temperatura Actual=20+8*SIN ( 2 * 3.14159 * Time / 12 )
+	~	°C
+	~	Ciclo anual de temperatura. Pico en enero ( 28°C), mínimo en julio ( \
+		12°C). Representa el clima de Mendoza.
+	|
+
+Total Capacidad Maxima=2780
+	~	hm3
+	~	1885 + 320 + 195 + 380 = 2.780 hm³. Capacidad total del sistema de los 4 \
+		embalses simulados.
+	|
+
+Total Demanda Riego=Agua Del Toro Demanda Riego+Carrizal Demanda Riego+Nihuil Demanda Riego\
+		+Potrerillos Demanda Riego
+	~	hm3/m
+	~	Demanda agrícola total del sistema. En enero puede superar los 680 \
+		hm³/mes.
+	|
+
+Total Energia GWh=Agua Del Toro Generacion GWh+Carrizal Generacion GWh+Nihuil Generacion GWh\
+		+Potrerillos Generacion GWh
+	~	GWh/mes
+	~	Energía eléctrica total generada por los 4 embalses.
+	|
+
+Total Ingresos Energia=Total Energia GWh*Precio MWh*1000
+	~	USD/mes
+	~	Ingresos mensuales por venta de energía eléctrica. La conversión ×1000 \
+		transforma GWh a MWh para aplicar el precio unitario.
+	|
+
+Total Porcentaje de Llenado Completo=Total Volumen/Total Capacidad Maxima
+	~	dmnl
+	~	Porcentaje de llenado del sistema completo. Umbrales de interpretación:
+		
+		Mayor a 0.70 → Sistema holgado
+		0.50 a 0.70 → Normal
+		0.30 a 0.50 → Alerta hídrica
+		Menor a 0.30 → Crisis hídrica
+	|
+
+Total Riego Entregado=(Agua Del Toro Salida Riego+Carrizal Salida Riego+Nihuil Salida Riego\
+		+Salida Riego Potre)*Eficiencia Riego
+	~	hm3/mes
+	~	Agua que REALMENTE llega a los cultivos en toda Mendoza, descontando el \
+		40% de pérdidas en la red de canales.
+	|
+
+Total Satisfaccion Riego=Total Riego Entregado/MAX ( 0.01 , Total Demanda Riego )
+	~	dmnl
+	~	Fracción de la demanda agrícola total que fue satisfecha. Es el \
+		indicador de impacto social del modelo. Valor 1.0 = todos los agricultores \
+		tienen el agua que necesitan.
+	|
+
+Total Volumen=Agua Del Toro Volumen Embalse+Carrizal Volumen Embalse+Nihuil Volumen Embalse\
+		+Volumen Embalse Potrerillos
+	~	hm3
+	~	Agua total almacenada en el sistema en cada instante. Principal indicador \
+		del estado hídrico general de Mendoza.
+	|
+
+Volumen Embalse Potrerillos= INTEG (Entrada Agua Potrerillos-Consumo Urbano Potrerillos\
+		-Evaporacion Potrerillos-Salida Energia Potrerillos
+	-Salida Riego Potre,
+		Potrerillos Vol Inicial)
+	~	hm3
+	~	Volumen de agua almacenado en Potrerillos en cada instante de la \
+		simulación. Aumenta únicamente con Pot_Entrada (que viene del CSV de \
+		Python). Disminuye por las 4 salidas. Es el corazón del modelo para este \
+		embalse.
+	|
+
+********************************************************
+	.Control
+********************************************************~
+		Simulation Control Parameters
+	|
+
+FINAL TIME  = 120
+	~	Month
+	~	The final time for the simulation.
+	|
+
+INITIAL TIME  = 0
+	~	Month
+	~	The initial time for the simulation.
+	|
+
+SAVEPER  = 
+        TIME STEP 
+	~	Month [0,?]
+	~	The frequency with which output is stored.
+	|
+
+TIME STEP  = 1
+	~	Month [0,?]
+	~	The time step for the simulation.
+	|
+
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*View 1
+$-1--1--1,0,|12||-1--1--1|-1--1--1|-1--1--1|-1--1--1|-1--1--1|96,96,75,2
+10,1,Volumen Embalse Potrerillos,-1216,121,66,26,3,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,2,48,-1521,120,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,3,5,2,100,0,0,22,0,192,0,-1--1--1,,1|(-1465,120)|
+1,4,5,1,4,0,0,22,0,192,0,-1--1--1,,1|(-1344,120)|
+11,5,0,-1412,120,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,6,Entrada Agua Potrerillos,-1412,154,52,26,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,7,48,-939,-228,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,8,10,1,100,0,0,22,0,192,0,-1--1--1,,1|(-1072,121)|
+1,9,10,7,4,0,0,22,0,192,0,-1--1--1,,1|(-1072,-228)|
+11,10,0,-1072,-241,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,11,Salida Energia Potrerillos,-1072,-211,50,22,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,12,48,-873,-16,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,13,15,1,100,0,0,22,0,192,0,-1--1--1,,1|(-1015,121)|
+1,14,15,12,4,0,0,22,0,192,0,-1--1--1,,1|(-946,-16)|
+11,15,0,-1015,-16,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,16,Evaporacion Potrerillos,-1015,22,47,30,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,17,Mes Actual,-2804,859,46,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,18,Time,-3209,667,31,16,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,19,18,17,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,20,Temperatura Actual,-3027,733,50,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,21,18,20,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,22,Eficiencia Riego,651,828,59,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,23,Precio MWh,771,1506,46,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,24,Tasa Evap Mensual,-2802,734,46,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,25,20,24,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,26,Potrerillos Cap Max,-386,495,55,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,27,Potrerillos Vol Min,-311,73,46,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,28,Potrerillos Vol Inicial,-1300,256,51,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,29,Potrerillos Cota Min,-1289,-259,57,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,30,Potrerillos hm3 por metro,-1310,-175,57,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,31,48,-853,212,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,32,34,1,100,0,0,22,0,192,0,-1--1--1,,1|(-1016,121)|
+1,33,34,31,4,0,0,22,0,192,0,-1--1--1,,1|(-937,212)|
+11,34,0,-1016,212,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,35,Consumo Urbano Potrerillos,-1016,246,65,26,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,36,28,1,0,0,0,0,0,192,1,-1--1--1,,1|(0,0)|
+10,37,Potrerillos Demanda Riego,-855,485,59,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,38,Potrerillos Disponible,-422,-61,46,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,39,Potrerillos Prioridad Energia,-613,-4,65,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,40,39,11,1,0,0,0,0,192,0,-1--1--1,,1|(-793,-168)|
+1,41,38,11,1,0,0,0,0,192,0,-1--1--1,,1|(-714,-182)|
+10,42,Potrerillos Altura,-1475,-307,63,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,43,30,42,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,44,29,42,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,45,1,42,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,46,Potrerillos Porcentaje Capacidad,-424,347,78,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,47,1,46,1,0,0,0,0,192,0,-1--1--1,,1|(-959,561)|
+1,48,26,46,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,49,1,38,1,0,0,0,0,192,0,-1--1--1,,1|(-975,-406)|
+1,50,27,38,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,51,46,39,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,52,17,37,1,0,0,0,0,192,0,-1--1--1,,1|(-1758,993)|
+10,53,Potrerillos Satisfaccion Riego,-994,660,67,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,54,37,53,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,55,Potrerillos Generacion GWh,-1084,-466,63,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,56,11,55,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,57,42,55,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,58,29,55,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,59,24,16,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,60,Nihuil Volumen Embalse,-1275,-1145,66,26,3,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,61,48,-1580,-1146,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,62,64,61,100,0,0,22,0,192,0,-1--1--1,,1|(-1524,-1146)|
+1,63,64,60,4,0,0,22,0,192,0,-1--1--1,,1|(-1403,-1146)|
+11,64,0,-1471,-1146,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,65,Nihuil Entrada Agua,-1471,-1112,52,26,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,66,48,-1007,-916,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,67,69,60,100,0,0,22,0,192,0,-1--1--1,,1|(-1132,-1145)|
+1,68,69,66,4,0,0,22,0,192,0,-1--1--1,,1|(-1072,-916)|
+11,69,0,-1132,-916,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,70,Nihuil Salida Riego,-1132,-882,47,26,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,71,48,-998,-1494,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,72,74,60,100,0,0,22,0,192,0,-1--1--1,,1|(-1131,-1145)|
+1,73,74,71,4,0,0,22,0,192,0,-1--1--1,,1|(-1131,-1494)|
+11,74,0,-1131,-1507,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,75,Nihuil Salida Energia,-1131,-1477,50,22,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,76,48,-932,-1282,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,77,79,60,100,0,0,22,0,192,0,-1--1--1,,1|(-1074,-1145)|
+1,78,79,76,4,0,0,22,0,192,0,-1--1--1,,1|(-1005,-1282)|
+11,79,0,-1074,-1282,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,80,Nihuil Evaporacion,-1074,-1244,47,30,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,81,Nihuil Cap Max,-445,-773,55,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,82,Nihuil Vol Min,-411,-1200,46,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,83,Nihuil Vol Inicial,-1359,-1012,51,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,84,Nihuil Cota Min,-1348,-1525,57,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,85,Nihuil hm3 por metro,-1369,-1441,57,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,86,48,-912,-1054,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,87,89,60,100,0,0,22,0,192,0,-1--1--1,,1|(-1075,-1145)|
+1,88,89,86,4,0,0,22,0,192,0,-1--1--1,,1|(-996,-1054)|
+11,89,0,-1075,-1054,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,90,Nihuil Consumo Urbano,-1075,-1020,65,26,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,91,83,60,0,0,0,0,0,192,1,-1--1--1,,1|(0,0)|
+10,92,Nihuil Demanda Riego,-914,-783,59,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,93,92,70,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,94,Nihuil Disponible,-522,-1334,46,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,95,94,70,1,0,0,0,0,192,0,-1--1--1,,1|(-738,-975)|
+10,96,Nihuil Prioridad Energia,-672,-1270,65,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,97,96,70,1,0,0,0,0,192,0,-1--1--1,,1|(-781,-978)|
+1,98,70,75,1,0,0,0,0,192,0,-1--1--1,,1|(-775,-1082)|
+1,99,96,75,1,0,0,0,0,192,0,-1--1--1,,1|(-852,-1434)|
+1,100,94,75,1,0,0,0,0,192,0,-1--1--1,,1|(-794,-1456)|
+10,101,Nihuil Altura,-1534,-1573,63,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,102,85,101,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,103,84,101,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,104,60,101,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,105,Nihuil Porcentaje Capacidad,-483,-921,78,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,106,60,105,1,0,0,0,0,192,0,-1--1--1,,1|(-1018,-705)|
+1,107,81,105,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,108,60,94,1,0,0,0,0,192,0,-1--1--1,,1|(-1053,-1648)|
+1,109,82,94,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,110,105,96,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,111,Nihuil Satisfaccion Riego,-1053,-608,67,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,112,70,111,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,113,92,111,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,114,Nihuil Generacion GWh,-1143,-1734,63,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,115,75,114,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,116,101,114,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,117,84,114,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,118,24,80,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,119,17,92,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,120,Carrizal Volumen Embalse,-1248,1403,66,26,3,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,121,48,-1553,1402,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,122,124,121,100,0,0,22,0,192,0,-1--1--1,,1|(-1497,1402)|
+1,123,124,120,4,0,0,22,0,192,0,-1--1--1,,1|(-1376,1402)|
+11,124,0,-1444,1402,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,125,Carrizal Entrada Agua,-1444,1436,52,26,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,126,48,-980,1632,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,127,129,120,100,0,0,22,0,192,0,-1--1--1,,1|(-1105,1403)|
+1,128,129,126,4,0,0,22,0,192,0,-1--1--1,,1|(-1045,1632)|
+11,129,0,-1105,1632,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,130,Carrizal Salida Riego,-1105,1666,47,26,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,131,48,-971,1054,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,132,134,120,100,0,0,22,0,192,0,-1--1--1,,1|(-1104,1403)|
+1,133,134,131,4,0,0,22,0,192,0,-1--1--1,,1|(-1104,1054)|
+11,134,0,-1104,1041,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,135,Carrizal Salida Energia,-1104,1071,50,22,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,136,48,-905,1266,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,137,139,120,100,0,0,22,0,192,0,-1--1--1,,1|(-1047,1403)|
+1,138,139,136,4,0,0,22,0,192,0,-1--1--1,,1|(-978,1266)|
+11,139,0,-1047,1266,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,140,Carrizal Evaporacion,-1047,1304,47,30,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,141,Carrizal Cap Max,-418,1775,55,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,142,Carrizal Vol Min,-384,1348,46,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,143,Carrizal Vol Inicial,-1332,1536,51,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,144,Carrizal Cota Min,-1321,1023,57,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,145,Carrizal hm3 por metro,-1342,1107,57,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,146,48,-885,1494,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,147,149,120,100,0,0,22,0,192,0,-1--1--1,,1|(-1048,1403)|
+1,148,149,146,4,0,0,22,0,192,0,-1--1--1,,1|(-969,1494)|
+11,149,0,-1048,1494,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,150,Carrizal Consumo Urbano,-1048,1528,65,26,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,151,143,120,0,0,0,0,0,192,1,-1--1--1,,1|(0,0)|
+10,152,Carrizal Demanda Riego,-887,1765,59,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,153,152,130,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,154,Carrizal Disponible,-495,1214,46,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,155,154,130,1,0,0,0,0,192,0,-1--1--1,,1|(-711,1573)|
+10,156,Carrizal Prioridad Energia,-645,1278,65,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,157,156,130,1,0,0,0,0,192,0,-1--1--1,,1|(-754,1570)|
+1,158,130,135,1,0,0,0,0,192,0,-1--1--1,,1|(-748,1466)|
+1,159,156,135,1,0,0,0,0,192,0,-1--1--1,,1|(-825,1114)|
+1,160,154,135,1,0,0,0,0,192,0,-1--1--1,,1|(-767,1092)|
+10,161,Carrizal Altura,-1507,975,63,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,162,145,161,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,163,144,161,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,164,120,161,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,165,Carrizal Porcentaje Capacidad,-456,1627,78,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,166,120,165,1,0,0,0,0,192,0,-1--1--1,,1|(-991,1843)|
+1,167,141,165,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,168,120,154,1,0,0,0,0,192,0,-1--1--1,,1|(-1026,900)|
+1,169,142,154,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,170,165,156,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,171,Carrizal Satisfaccion Riego,-1026,1940,67,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,172,130,171,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,173,152,171,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,174,Carrizal Generacion GWh,-1116,814,63,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,175,135,174,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,176,161,174,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,177,144,174,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,178,24,140,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,179,17,152,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,180,Agua Del Toro Volumen Embalse,-1175,2732,66,26,3,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,181,48,-1480,2731,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,182,184,181,100,0,0,22,0,192,0,-1--1--1,,1|(-1424,2731)|
+1,183,184,180,4,0,0,22,0,192,0,-1--1--1,,1|(-1303,2731)|
+11,184,0,-1371,2731,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,185,Agua Del Toro Entrada Agua,-1371,2765,52,26,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,186,48,-907,2961,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,187,189,180,100,0,0,22,0,192,0,-1--1--1,,1|(-1032,2732)|
+1,188,189,186,4,0,0,22,0,192,0,-1--1--1,,1|(-972,2961)|
+11,189,0,-1032,2961,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,190,Agua Del Toro Salida Riego,-1032,2995,47,26,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,191,48,-898,2383,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,192,194,180,100,0,0,22,0,192,0,-1--1--1,,1|(-1031,2732)|
+1,193,194,191,4,0,0,22,0,192,0,-1--1--1,,1|(-1031,2383)|
+11,194,0,-1031,2370,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,195,Agua Del Toro Salida Energia,-1031,2400,50,22,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,196,48,-832,2595,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,197,199,180,100,0,0,22,0,192,0,-1--1--1,,1|(-974,2732)|
+1,198,199,196,4,0,0,22,0,192,0,-1--1--1,,1|(-905,2595)|
+11,199,0,-974,2595,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,200,Agua Del Toro Evaporacion,-974,2633,47,30,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,201,Agua Del Toro Cap Max,-345,3104,55,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,202,Agua Del Toro Vol Min,-311,2677,46,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,203,Agua Del Toro Vol Inicial,-1259,2865,51,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,204,Agua Del Toro Cota Min,-1248,2352,57,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,205,Agua Del Toro hm3 por metro,-1269,2436,57,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,206,48,-812,2823,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,207,209,180,100,0,0,22,0,192,0,-1--1--1,,1|(-975,2732)|
+1,208,209,206,4,0,0,22,0,192,0,-1--1--1,,1|(-896,2823)|
+11,209,0,-975,2823,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,210,Agua Del Toro Consumo Urbano,-975,2857,65,26,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,211,203,180,0,0,0,0,0,192,1,-1--1--1,,1|(0,0)|
+10,212,Agua Del Toro Demanda Riego,-814,3094,59,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,213,212,190,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,214,Agua Del Toro Disponible,-422,2543,46,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,215,214,190,1,0,0,0,0,192,0,-1--1--1,,1|(-638,2902)|
+10,216,Agua Del Toro Prioridad Energia,-572,2607,65,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,217,216,190,1,0,0,0,0,192,0,-1--1--1,,1|(-681,2899)|
+1,218,190,195,1,0,0,0,0,192,0,-1--1--1,,1|(-675,2795)|
+1,219,216,195,1,0,0,0,0,192,0,-1--1--1,,1|(-752,2443)|
+1,220,214,195,1,0,0,0,0,192,0,-1--1--1,,1|(-694,2421)|
+10,221,Agua Del Toro Altura,-1434,2304,63,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,222,205,221,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,223,204,221,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,224,180,221,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,225,Agua Del Toro Porcentaje Capacidad,-383,2956,78,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,226,180,225,1,0,0,0,0,192,0,-1--1--1,,1|(-918,3172)|
+1,227,201,225,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,228,180,214,1,0,0,0,0,192,0,-1--1--1,,1|(-953,2229)|
+1,229,202,214,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,230,225,216,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,231,Agua Del Toro Satisfaccion Riego,-953,3269,67,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,232,190,231,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,233,212,231,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,234,Agua Del Toro Generacion GWh,-1043,2143,63,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,235,195,234,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,236,221,234,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,237,204,234,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,238,24,200,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,239,17,212,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,240,Total Capacidad Maxima,568,207,60,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,241,Total Volumen,566,76,54,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,242,60,241,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,243,1,241,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,244,120,241,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,245,180,241,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,246,Total Porcentaje de Llenado Completo,839,149,71,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,247,241,246,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,248,240,246,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,249,Total Riego Entregado,548,631,46,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,250,70,249,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,251,130,249,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,252,190,249,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,253,22,249,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,254,Total Demanda Riego,550,1015,57,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,255,212,254,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,256,152,254,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,257,37,254,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,258,92,254,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,259,Total Satisfaccion Riego,952,762,65,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,260,249,259,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,261,254,259,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,262,Total Energia GWh,614,1351,50,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,263,114,262,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,264,55,262,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,265,174,262,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,266,234,262,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,267,Total Ingresos Energia,818,1337,53,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,268,262,267,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,269,23,267,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,270,Crisis Hidrica,1176,344,54,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,271,246,270,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,272,Decision Sistema,1202,552,63,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,273,246,272,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,274,Conviene Riego,1434,574,58,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,275,272,274,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,276,Conviene Energia,1424,634,65,26,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,277,272,276,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+12,278,48,-1072,352,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,279,281,1,100,0,0,22,0,192,0,-1--1--1,,1|(-1072,121)|
+1,280,281,278,4,0,0,22,0,192,0,-1--1--1,,1|(-1072,256)|
+11,281,0,-1072,162,8,6,33,3,0,0,4,0,0,0,0,0,0,0,0,0
+10,282,Salida Riego Potre,-1017,162,47,26,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,283,282,53,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,284,39,282,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,285,38,282,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,286,37,282,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,287,282,11,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,288,282,249,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+///---\\\
+:L<%^E!@
+1:current.vdfx
+4:Time
+5:Decision Sistema
+9:current
+19:75,0
+24:0
+25:120
+26:120
+23:0
+15:0,0,0,0,0,0
+27:0,
+34:0,
+42:0
+72:0
+73:0
+95:0
+96:0
+97:0
+77:0
+78:0
+102:1
+93:0
+94:0
+92:0
+91:0
+90:0
+87:0
+75:
+43:
+103:8,8,8,3,8
+105:0,0,0,0,0,0,0,0,0,0
+104:Vensim Sans|12||0-0-0|0-0-0|-1--1--1|0-0-255|192-192-192|-1--1--1
