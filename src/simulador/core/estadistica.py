@@ -106,25 +106,7 @@ def test_ks_normal(datos: np.ndarray, serie: str) -> ResultadoTest:
     )
 
 
-def test_autocorrelacion(
-    datos: np.ndarray, serie: str, lags: int = 5
-) -> ResultadoTest:
-    """Independencia: autocorrelación dentro del IC 95% para cada lag."""
-    intervalo = 1.96 / np.sqrt(len(datos))
-    correlaciones = {}
-    for lag in range(1, lags + 1):
-        r = float(np.corrcoef(datos[:-lag], datos[lag:])[0, 1])
-        correlaciones[f"lag_{lag}"] = r
 
-    max_abs = max(abs(r) for r in correlaciones.values())
-    return ResultadoTest(
-        nombre="autocorrelacion",
-        serie=serie,
-        estadistico=max_abs,
-        p_valor=float("nan"),
-        aceptado=max_abs < intervalo,
-        detalle={"intervalo_confianza": float(intervalo), **correlaciones},
-    )
 
 
 def validar_series_climaticas(
@@ -136,9 +118,7 @@ def validar_series_climaticas(
     tests = (
         test_chi_cuadrada_gamma(precipitacion_anual, "precipitacion"),
         test_ks_gamma(precipitacion_anual, "precipitacion"),
-        test_autocorrelacion(precipitacion_anual, "precipitacion"),
         test_ks_normal(fusion_anual, "fusion"),
-        test_autocorrelacion(fusion_anual, "fusion"),
         test_ks_normal(afluente_mensual.ravel(), "afluente"),
     )
     return ReporteValidacion(

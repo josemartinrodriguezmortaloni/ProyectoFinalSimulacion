@@ -44,7 +44,7 @@ def ejecutar(repo: RepositorioArtefactos, id_corrida: str) -> KPIsSistema:
     print(f"  Energía total: {kpis.energia_total_gwh:.1f} GWh")
     print(f"  Ingresos: {kpis.ingresos_totales_usd:,.0f} USD")
     print(f"  Llenado medio: {kpis.llenado_medio:.2%} (mín {kpis.llenado_minimo:.2%})")
-    print(f"  Meses en crisis: {kpis.meses_crisis} | en alerta: {kpis.meses_alerta}")
+
     for dique, valor in kpis.satisfaccion_por_dique.items():
         print(f"    {dique}: satisfacción {valor:.3f}")
     return kpis
@@ -72,7 +72,7 @@ def ejecutar_global(
 
     columnas_resumen = [
         "id_corrida", "asignacion", "satisfaccion_riego_media",
-        "energia_total_gwh", "meses_crisis", "score",
+        "energia_total_gwh", "score",
     ]
     print("✓ Ranking global de corridas (mejor política primero):")
     print(ranking[columnas_resumen].to_string(index=False))

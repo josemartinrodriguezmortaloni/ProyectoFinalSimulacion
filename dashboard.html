@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mendoza Hídrica - Dashboard</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    
+    <!-- PapaParse para CSV -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --secondary: #10b981;
+            --dark: #0f172a;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #60a5fa, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .back-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+        .back-link:hover { color: white; }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        /* Glassmorphism Cards */
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Uploader */
+        .upload-area {
+            border: 2px dashed rgba(59, 130, 246, 0.5);
+            border-radius: 12px;
+            padding: 3rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(59, 130, 246, 0.05);
+        }
+        .upload-area:hover {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: var(--primary);
+        }
+        .upload-area input { display: none; }
+        .upload-area h3 { margin-top: 0; color: #60a5fa; }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            display: none; /* Oculto hasta cargar CSV */
+        }
+
+        /* Table */
+        .table-container {
+            overflow-x: auto;
+            margin-top: 1rem;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        th {
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.05em;
+        }
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        .bg-green { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+        .bg-yellow { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+        .bg-red { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+        
+        canvas {
+            width: 100% !important;
+            max-height: 350px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <h1>Mendoza Hídrica</h1>
+        <a href="informe_final.html" class="back-link">← Informe Técnico</a>
+    </nav>
+
+    <div class="container">
+        <!-- Upload Section -->
+        <div class="card" id="uploadCard">
+            <label class="upload-area">
+                <input type="file" id="csvFileInput" accept=".csv" />
+                <h3>📊 Cargar Artefacto de Simulación</h3>
+                <p style="color: var(--text-muted); margin-bottom: 0;">Seleccioná el archivo <code>ranking_global.csv</code> para visualizar los resultados interactivos.</p>
+                <p id="fileName" style="margin-top: 1rem; font-weight: 600; color: white;"></p>
+            </label>
+        </div>
+
+        <!-- Dashboard Content -->
+        <div class="dashboard-grid" id="dashboardGrid">
+            <!-- Chart 1 -->
+            <div class="card">
+                <h3 style="margin-top: 0;">🏆 Ranking de Políticas (Score)</h3>
+                <canvas id="scoreChart"></canvas>
+            </div>
+            
+            <!-- Chart 2 -->
+            <div class="card">
+                <h3 style="margin-top: 0;">⚖️ Riego vs Energía (Trade-off)</h3>
+                <canvas id="tradeoffChart"></canvas>
+            </div>
+
+            <!-- Data Table -->
+            <div class="card" style="grid-column: 1 / -1;">
+                <h3 style="margin-top: 0;">📄 Datos Crudos</h3>
+                <div class="table-container" id="tableWrapper"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let scoreChartInstance = null;
+        let tradeoffChartInstance = null;
+
+        // Configuración global de Chart.js para tema oscuro
+        Chart.defaults.color = '#94a3b8';
+        Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.1)';
+
+        document.getElementById('csvFileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            document.getElementById('fileName').textContent = "Procesando: " + file.name;
+
+            Papa.parse(file, {
+                header: true,
+                dynamicTyping: true,
+                skipEmptyLines: true,
+                complete: function(results) {
+                    processData(results.data, file.name);
+                }
+            });
+        });
+
+        function processData(data, filename) {
+            // Mostrar grid
+            document.getElementById('dashboardGrid').style.display = 'grid';
+            
+            // 1. Renderizar Tabla
+            renderTable(data);
+
+            // 2. Si es el ranking global, armar gráficos específicos
+            if (data[0] && data[0].hasOwnProperty('score')) {
+                renderCharts(data);
+            }
+        }
+
+        function renderTable(data) {
+            if (!data.length) return;
+            
+            const headers = Object.keys(data[0]);
+            let html = '<table><thead><tr>';
+            headers.forEach(h => html += `<th>${h}</th>`);
+            html += '</tr></thead><tbody>';
+
+            data.forEach(row => {
+                html += '<tr>';
+                headers.forEach(h => {
+                    let val = row[h];
+                    
+                    // Formateo de números largos
+                    if (typeof val === 'number') {
+                        val = val % 1 === 0 ? val : val.toFixed(3);
+                    }
+                    
+                    // Colores para score
+                    if (h === 'score') {
+                        if (row[h] > 0.6) val = `<span class="badge bg-green">${val}</span>`;
+                        else if (row[h] > 0.3) val = `<span class="badge bg-yellow">${val}</span>`;
+                        else val = `<span class="badge bg-red">${val}</span>`;
+                    }
+                    html += `<td>${val}</td>`;
+                });
+                html += '</tr>';
+            });
+            html += '</tbody></table>';
+            document.getElementById('tableWrapper').innerHTML = html;
+        }
+
+        function renderCharts(data) {
+            // Extraer datos
+            const labels = data.map(d => d.id_corrida.replace('100-', '')); // Limpiar nombre para que no quede tan largo
+            const scores = data.map(d => d.score);
+            
+            // Destruir instancias previas si existen
+            if (scoreChartInstance) scoreChartInstance.destroy();
+            if (tradeoffChartInstance) tradeoffChartInstance.destroy();
+
+            // Gráfico 1: Barras de Score
+            const ctx1 = document.getElementById('scoreChart').getContext('2d');
+            
+            // Gradiente para barras
+            const gradientBar = ctx1.createLinearGradient(0, 0, 0, 400);
+            gradientBar.addColorStop(0, 'rgba(59, 130, 246, 1)');
+            gradientBar.addColorStop(1, 'rgba(16, 185, 129, 0.8)');
+
+            scoreChartInstance = new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Score Multiobjetivo',
+                        data: scores,
+                        backgroundColor: gradientBar,
+                        borderRadius: 6,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, max: 1 } }
+                }
+            });
+
+            // Gráfico 2: Scatter Trade-off
+            const ctx2 = document.getElementById('tradeoffChart').getContext('2d');
+            const scatterData = data.map(d => ({
+                x: d.satisfaccion_riego_media,
+                y: d.energia_total_gwh,
+                corrida: d.id_corrida
+            }));
+
+            scoreChartInstance2 = new Chart(ctx2, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Políticas Hídricas',
+                        data: scatterData,
+                        backgroundColor: '#f59e0b',
+                        borderColor: '#fbbf24',
+                        pointRadius: 8,
+                        pointHoverRadius: 12
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => {
+                                    const d = ctx.raw;
+                                    return `${d.corrida} | Riego: ${d.x.toFixed(2)} | Energía: ${Math.round(d.y)} GWh`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { title: { display: true, text: 'Satisfacción Riego Media' } },
+                        y: { title: { display: true, text: 'Energía Total (GWh)' } }
+                    }
+                }
+            });
+            tradeoffChartInstance = scoreChartInstance2;
+        }
+    </script>
+</body>
+</html>

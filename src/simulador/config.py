@@ -52,7 +52,7 @@ class ConfigPipeline:
         )
     )
     diques: tuple[ConfigDique, ...] = DIQUES_MENDOZA
-    pesos_score: tuple[float, float, float] = (0.5, 0.3, 0.2)
+    pesos_score: tuple[float, float] = (0.6, 0.4)
 
 
 @dataclass(frozen=True)

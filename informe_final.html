@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informe Final: Optimización de Distribución Hídrica en Mendoza</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        .container {
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            text-align: center;
+        }
+        h2 {
+            color: #2980b9;
+            margin-top: 30px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+        h3 {
+            color: #34495e;
+        }
+        p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+        ul {
+            margin-bottom: 15px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        code {
+            background-color: #f4f4f4;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-family: 'Courier New', Courier, monospace;
+            color: #c0392b;
+        }
+        .highlight {
+            background-color: #e8f4f8;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 4px 4px 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Informe Técnico del Proyecto Final de Simulación</h1>
+    <p style="text-align: center; font-style: italic;">Optimización de la Distribución Hídrica en Mendoza mediante Modelado Dinámico y Simulación Estocástica</p>
+
+    <h2>1. Introducción al Proyecto</h2>
+    <p>El presente proyecto de simulación tiene como objetivo analizar y optimizar el uso del recurso hídrico en la provincia de Mendoza. La gestión del agua representa un desafío multiobjetivo donde se debe balancear la <strong>generación de energía hidroeléctrica</strong> con la <strong>satisfacción de la demanda de riego agrícola</strong>.</p>
+    <p>Para lograr este análisis, el proyecto propone una arquitectura híbrida de vanguardia: utiliza un modelo de Dinámica de Sistemas construido en <strong>Vensim</strong> para emular el comportamiento físico de los embalses, y un entorno en <strong>Python</strong> para la generación de series climáticas pseudoaleatorias, validación estadística, control de escenarios y orquestación masiva.</p>
+
+    <div style="text-align: center; margin: 30px 0;">
+        <a href="dashboard.html" style="background-color: #2ecc71; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 6px rgba(46, 204, 113, 0.3);">📊 Abrir Dashboard Interactivo de CSVs</a>
+    </div>
+
+    <h2>2. Modelo Dinámico en Vensim</h2>
+    <p>El corazón físico de la simulación está contenido en el archivo <code>ProyectoGlobalSimulacion(PrimerModeloTerminado).mdl</code>, desarrollado íntegramente en Vensim. Este modelo de dinámica de sistemas (Unidad 4) define la infraestructura hídrica de la provincia.</p>
+    <ul>
+        <li><strong>Variables de Estado (Niveles):</strong> Se modelan los cuatro diques principales de Mendoza: Potrerillos, El Carrizal, El Nihuil y Agua del Toro.</li>
+        <li><strong>Flujos (Rates):</strong> Las entradas de agua (afluentes por fusión de nieve y precipitaciones) y las salidas de agua (caudales turbinados para generar energía y caudales destinados a las redes de riego).</li>
+        <li><strong>Variables Auxiliares:</strong> Lógicas de control interno de las compuertas, donde los diques restringen el agua enviada al riego si el porcentaje de llenado (Llenado Medio) disminuye peligrosamente.</li>
+    </ul>
+
+    <h2>3. Python: Generación de Números Pseudoaleatorios</h2>
+    <p>La inyección de aleatoriedad (Unidad 5) para simular los estresores climáticos se realiza en el módulo <code>generacion.py</code> mediante Python.</p>
+    <p><strong>El Motor Generador:</strong> Se utiliza el generador <code>numpy.random.default_rng(seed)</code>. Bajo el capó, este motor implementa el algoritmo <strong>PCG64 (Generador Congruencial Permutado de 64 bits)</strong>. El PCG64 es una evolución matemática directa del Generador Congruencial Lineal Mixto clásico visto en clase. Resuelve los defectos estadísticos del generador lineal tradicional añadiendo una etapa de permutación de bits al final, lo que garantiza secuencias uniformes $U(0,1)$ de extrema longitud e independencia sin formar patrones predecibles.</p>
+    <p>A partir de los números uniformes base, el generador aplica internamente algoritmos complejos (como transformadas de Box-Muller o métodos de Aceptación/Rechazo) para generar números bajo otras distribuciones:</p>
+    <ul>
+        <li><strong>Fusión de Nieve Anual:</strong> Sigue una distribución <em>Normal</em> (Campana de Gauss). Modela la cantidad total de nieve acumulada en el año en alta montaña.</li>
+        <li><strong>Precipitaciones Anuales:</strong> Sigue una distribución <em>Gamma</em>. Típicamente usada en hidrología porque no admite valores negativos y modela eventos extremos asimétricos.</li>
+        <li><strong>Afluentes Base Mensuales:</strong> Sigue una distribución <em>Normal</em> estacional. Modela el caudal natural base de los ríos sin contar los deshielos masivos.</li>
+        <li><strong>Demanda Agrícola Mensual:</strong> Se genera con una curva <em>Estacional</em> determinística a la cual se le aplica un <em>Ruido Multiplicativo Normal</em>. Esto significa que la demanda sube en verano, pero cada año varía aleatoriamente simulando el clima caluroso o fresco que afecta la necesidad de riego de las fincas.</li>
+        <li><strong>Temperatura Media Mensual:</strong> Modela el ciclo anual térmico con una función senoidal (picos en enero, valles en julio) perturbada por un ruido <em>Normal (N(0,1))</em>.</li>
+    </ul>
+    <p>Finalmente, todas estas variables estocásticas se consolidan en una enorme tabla de datos llamada <strong>Series Climáticas</strong> (DataFrame de Pandas). Esta tabla cruza los datos de cada mes durante todo el horizonte de la simulación (ej. 500 años = 6000 meses) y se guarda como el primer artefacto físico del pipeline.</p>
+
+    <h2>4. Validación Estadística (Quality Gate)</h2>
+    <p>Antes de permitir que el modelo Vensim ejecute una corrida, Python realiza pruebas estadísticas de bondad de ajuste para garantizar que la muestra pseudoaleatoria generada respeta fielmente la distribución teórica esperada. Esto asegura que el experimento no se contamine con "ruido mal generado".</p>
+    <div class="highlight">
+        El pipeline incorpora un <strong>Quality Gate</strong> en la Fase 2 (<code>validar.py</code>). Si las series generadas no superan un Nivel de Significancia del 5% en los tests de hipótesis, la simulación se aborta automáticamente (Exit 1).
+    </div>
+    <p>Las pruebas implementadas en <code>estadistica.py</code> son:</p>
+    <ul>
+        <li><strong>Prueba Chi-Cuadrada:</strong> Aplicada a la distribución Gamma de las precipitaciones agrupando la muestra en clases (bins) equiprobables para calcular el estadístico frente a los valores esperados.</li>
+        <li><strong>Prueba de Kolmogorov-Smirnov (K-S):</strong> Prueba continua que mide la máxima distancia absoluta entre la función de distribución empírica (generada) y la función de distribución acumulada teórica (Normal para nieve, Gamma para lluvia).</li>
+    </ul>
+
+    <h2>5. Asignación de Valores a las Variables Aleatorias</h2>
+    <p>En la Fase 3 (<code>convertir.py</code>), los números aleatorios climáticos (nieve y precipitación generados anualmente) se convierten en las variables aleatorias definitivas que necesita Vensim: <strong>Caudales Mensuales ($hm^3/mes$) para cada dique.</strong></p>
+    <p>Aquí es donde las políticas gubernamentales entran en juego. Se implementaron dos lógicas de asignación (distribución de la nieve generada a lo largo de los 12 meses):</p>
+    <ul>
+        <li><strong>Asignación Uniforme:</strong> El agua generada se divide exactamente igual en los 12 meses del año ($1/12$).</li>
+        <li><strong>Asignación Estacional:</strong> El agua se distribuye respetando la curva histórica de deshielo en Mendoza (picos máximos en Diciembre-Enero, valles en Junio-Julio).</li>
+    </ul>
+    <p>A este flujo volumétrico total se le aplican factores geográficos, distribuyendo el agua a cada dique según el tamaño histórico de sus cuencas (ej. Potrerillos 55%, Carrizal 12%). El resultado se guarda en archivos <code>.csv</code> por escenario, que actúan como "contratos de datos" limpios para Vensim.</p>
+
+    <h2>6. Integración y Ejecución Dinámica: Python + PySD + Vensim</h2>
+    <p>La Fase 4 de la simulación (<code>simular.py</code>) materializa la unión entre los números aleatorios generados y el modelo físico, gracias al framework <strong>PySD</strong>.</p>
+    <p>PySD es una biblioteca de Python capaz de leer el archivo <code>.mdl</code> propietario de Vensim y transpilarlo (traducirlo línea por línea) a código Python nativo en tiempo de ejecución. El flujo de trabajo es el siguiente:</p>
+    <ol>
+        <li>Python, usando PySD, inicializa el modelo Vensim (<code>pysd.read_vensim()</code>).</li>
+        <li>Se lee el archivo <code>.csv</code> generado en la fase anterior con los números aleatorios ya transformados y asignados.</li>
+        <li>Usando el objeto del modelo, Python reemplaza temporalmente las constantes climáticas fijas de Vensim con las <strong>Series de Tiempo Externas (Time Series Data)</strong> extraídas del CSV mediante el método <code>model.run(params=...)</code>.</li>
+        <li>PySD integra las ecuaciones diferenciales numéricamente mes a mes a lo largo del "FINAL TIME" (120 meses).</li>
+        <li>Los resultados (Niveles, Energía, Satisfacción de Riego por cada "Tick" temporal) se devuelven nativamente como un <em>DataFrame</em> de la librería Pandas, listo para su análisis de negocio.</li>
+    </ol>
+
+    <h2>7. Conclusión y Funciones de Utilidad (KPIs)</h2>
+    <p>Todo el pipeline culmina en la Fase 5 (<code>analizar.py</code> y <code>kpis.py</code>), donde el modelo toma las métricas crudas arrojadas por PySD y las convierte en indicadores de negocio.</p>
+    <p>Dado que el problema requiere balancear diferentes intereses económicos, la evaluación final de cada escenario se realiza combinando un índice de <strong>Satisfacción de Riego Media</strong> (fundamental para la agricultura local) y un índice de <strong>Energía Total Generada</strong> (vital para la rentabilidad y autosuficiencia). Mediante un <em>Score Multiobjetivo Ponderado</em> (60% Riego, 40% Energía), el simulador es capaz de ordenar diferentes políticas públicas e identificar cuál beneficia más a la provincia frente a eventos extremos como Sequías o un fenómeno El Niño.</p>
+</div>
+
+</body>
+</html>

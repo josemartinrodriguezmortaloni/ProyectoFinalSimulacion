@@ -113,9 +113,9 @@ def _cmd_analizar(args: argparse.Namespace) -> int:
     config = _config_desde_args(args)
     repo = _repo(config)
     if args.todas:
-        riego, energia, crisis = config.pesos_score
+        riego, energia = config.pesos_score
         analizar.ejecutar_global(
-            repo, PesosScore(riego=riego, energia=energia, crisis=crisis)
+            repo, PesosScore(riego=riego, energia=energia)
         )
     else:
         analizar.ejecutar(repo, repo.resolver_id(args.corrida))

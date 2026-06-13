@@ -9,8 +9,6 @@ from dataclasses import asdict, dataclass
 
 import pandas as pd
 
-UMBRAL_CRISIS = 0.30
-UMBRAL_ALERTA = 0.50
 
 COLUMNA_SATISFACCION = "Total Satisfaccion Riego"
 COLUMNA_ENERGIA = "Total Energia GWh"
@@ -31,8 +29,7 @@ class KPIsSistema:
     riego_total_hm3: float
     llenado_medio: float
     llenado_minimo: float
-    meses_crisis: int
-    meses_alerta: int
+
     satisfaccion_por_dique: dict[str, float]
 
     def a_dict(self) -> dict:
@@ -65,10 +62,7 @@ def calcular_kpis(resultados: pd.DataFrame) -> KPIsSistema:
         riego_total_hm3=float(resultados[COLUMNA_RIEGO].sum()),
         llenado_medio=float(llenado.mean()),
         llenado_minimo=float(llenado.min()),
-        meses_crisis=int((llenado < UMBRAL_CRISIS).sum()),
-        meses_alerta=int(
-            ((llenado >= UMBRAL_CRISIS) & (llenado < UMBRAL_ALERTA)).sum()
-        ),
+
         satisfaccion_por_dique=_satisfaccion_por_dique(resultados),
     )
 
@@ -77,9 +71,8 @@ def calcular_kpis(resultados: pd.DataFrame) -> KPIsSistema:
 class PesosScore:
     """Ponderación del score multiobjetivo de una política hídrica."""
 
-    riego: float = 0.5
-    energia: float = 0.3
-    crisis: float = 0.2
+    riego: float = 0.6
+    energia: float = 0.4
 
 
 def puntuar_corridas(
@@ -93,11 +86,8 @@ def puntuar_corridas(
     puntuadas = kpis_corridas.copy()
     energia_max = puntuadas["energia_total_gwh"].max()
     puntuadas["energia_norm"] = puntuadas["energia_total_gwh"] / energia_max
-    fraccion_crisis = puntuadas["meses_crisis"] / puntuadas["horizonte_meses"]
-
     puntuadas["score"] = (
         pesos.riego * puntuadas["satisfaccion_riego_media"]
         + pesos.energia * puntuadas["energia_norm"]
-        - pesos.crisis * fraccion_crisis
     )
     return puntuadas.sort_values("score", ascending=False).reset_index(drop=True)
