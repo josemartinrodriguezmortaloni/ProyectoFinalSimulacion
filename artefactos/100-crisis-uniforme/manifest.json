@@ -1,0 +1,17 @@
+{
+  "id_corrida": "100-crisis-uniforme",
+  "seed": 100,
+  "n_anios": 500,
+  "creado": "2026-06-13T17:10:41",
+  "asignacion": "uniforme",
+  "horizonte_meses": 120,
+  "proporciones_diques": {
+    "Potrerillos": 0.55,
+    "Agua del Toro": 0.18,
+    "El Nihuil": 0.15,
+    "El Carrizal": 0.12
+  },
+  "ruta_mdl": "modeloDinamico\\ProyectoGlobalSimulacion(PrimerModeloTerminado).mdl",
+  "hash_mdl": "e9ac0232e4bf94c4",
+  "version_pysd": "3.14.3"
+}

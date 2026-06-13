@@ -1,0 +1,2 @@
+id_corrida,seed,asignacion,horizonte_meses,satisfaccion_riego_media,satisfaccion_riego_minima,energia_total_gwh,ingresos_totales_usd,riego_total_hm3,llenado_medio,llenado_minimo,satisfaccion_potrerillos,satisfaccion_carrizal,satisfaccion_nihuil,satisfaccion_agua_del_toro
+100-sequia_total-estacional,100,estacional,120,0.0069366648658119225,0.0,257.63355874708236,20610684.699766587,395.37091085651855,0.5726571839798869,0.5529750921182932,0.011199031621140932,0.010693498291632141,0.013940262861068985,0.01132289346594883

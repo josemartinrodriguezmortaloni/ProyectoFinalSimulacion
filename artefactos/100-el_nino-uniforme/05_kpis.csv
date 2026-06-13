@@ -1,0 +1,2 @@
+id_corrida,seed,asignacion,horizonte_meses,satisfaccion_riego_media,satisfaccion_riego_minima,energia_total_gwh,ingresos_totales_usd,riego_total_hm3,llenado_medio,llenado_minimo,satisfaccion_potrerillos,satisfaccion_carrizal,satisfaccion_nihuil,satisfaccion_agua_del_toro
+100-el_nino-uniforme,100,uniforme,120,0.5390082118521555,0.3228611582305415,21141.99017604463,1691359214.0835707,22212.317338170025,0.6057497383364385,0.5944722497808992,0.8460823741861876,0.9956046411648501,0.9675899533049853,0.9427005557748607

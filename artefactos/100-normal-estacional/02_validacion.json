@@ -1,0 +1,50 @@
+{
+  "aceptado": true,
+  "tests": [
+    {
+      "nombre": "chi_cuadrada_gamma",
+      "serie": "precipitacion",
+      "estadistico": 10.288,
+      "p_valor": 0.32767711977133307,
+      "aceptado": true,
+      "detalle": {
+        "alpha": 8.58276227373462,
+        "beta": 27.745542167845564,
+        "bins": 12
+      }
+    },
+    {
+      "nombre": "kolmogorov_smirnov_gamma",
+      "serie": "precipitacion",
+      "estadistico": 0.02312620615575709,
+      "p_valor": 0.9462270898196619,
+      "aceptado": true,
+      "detalle": {
+        "alpha": 8.58276227373462,
+        "beta": 27.745542167845564
+      }
+    },
+    {
+      "nombre": "kolmogorov_smirnov_normal",
+      "serie": "fusion",
+      "estadistico": 0.04131412676879853,
+      "p_valor": 0.35112014668271796,
+      "aceptado": true,
+      "detalle": {
+        "media": 300.4814158818013,
+        "desvio": 76.16841064735515
+      }
+    },
+    {
+      "nombre": "kolmogorov_smirnov_normal",
+      "serie": "afluente",
+      "estadistico": 0.004988361976380085,
+      "p_valor": 0.9981795905072899,
+      "aceptado": true,
+      "detalle": {
+        "media": 60.2913218797388,
+        "desvio": 19.95846935187534
+      }
+    }
+  ]
+}

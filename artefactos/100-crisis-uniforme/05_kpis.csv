@@ -1,0 +1,2 @@
+id_corrida,seed,asignacion,horizonte_meses,satisfaccion_riego_media,satisfaccion_riego_minima,energia_total_gwh,ingresos_totales_usd,riego_total_hm3,llenado_medio,llenado_minimo,satisfaccion_potrerillos,satisfaccion_carrizal,satisfaccion_nihuil,satisfaccion_agua_del_toro
+100-crisis-uniforme,100,uniforme,120,0.06684667779106358,0.0297387678391181,1420.8653944708776,113669231.55767022,2354.6604772373075,0.5932145029414946,0.5884813350999166,0.09641532428789155,0.1534505950920912,0.13010419325344758,0.1169245278176485

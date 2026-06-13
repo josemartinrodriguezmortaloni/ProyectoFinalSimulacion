@@ -1,0 +1,2 @@
+id_corrida,seed,asignacion,horizonte_meses,satisfaccion_riego_media,satisfaccion_riego_minima,energia_total_gwh,ingresos_totales_usd,riego_total_hm3,llenado_medio,llenado_minimo,satisfaccion_potrerillos,satisfaccion_carrizal,satisfaccion_nihuil,satisfaccion_agua_del_toro
+100-normal-estacional,100,estacional,120,0.33379401774699374,0.093101978228612,10064.629657497997,805170372.5998396,15900.925056075672,0.606286197198579,0.5930221513654631,0.4812386508261759,0.7495575023351143,0.6589252836328786,0.5864981491536154
