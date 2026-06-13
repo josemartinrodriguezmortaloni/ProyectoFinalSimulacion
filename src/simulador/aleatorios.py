@@ -18,8 +18,8 @@ class GeneradorNumerosAleatorios:
     def generar_precipitacion_anual(
         self, n_años: int = 500, media_mm: float = 230, desv_mm: float = 80
     ) -> np.ndarray:
-        varianza = desv_mm ** 2
-        alpha = media_mm ** 2 / varianza
+        varianza = desv_mm**2
+        alpha = media_mm**2 / varianza
         beta = varianza / media_mm
 
         lluvia = np.random.gamma(alpha, beta, n_años)
@@ -40,10 +40,22 @@ class GeneradorNumerosAleatorios:
     def generar_demanda_agricola(
         self, n_años: int = 500, media_hm3_mes: float = 250
     ) -> np.ndarray:
-        estacion = np.array([
-            1.00, 1.10, 1.05, 0.70, 0.40, 0.35,
-            0.40, 0.50, 0.80, 1.00, 1.15, 1.05,
-        ])
+        estacion = np.array(
+            [
+                1.00,
+                1.10,
+                1.05,
+                0.70,
+                0.40,
+                0.35,
+                0.40,
+                0.50,
+                0.80,
+                1.00,
+                1.15,
+                1.05,
+            ]
+        )
 
         demanda = np.zeros((n_años, 12))
         for año in range(n_años):
@@ -121,11 +133,13 @@ class GeneradorNumerosAleatorios:
             correlacion = np.corrcoef(datos[:-lag], datos[lag:])[0, 1]
             ic = 1.96 / np.sqrt(len(datos))
 
-            resultados.append({
-                "lag": lag,
-                "correlacion": correlacion,
-                "independiente": abs(correlacion) < ic,
-            })
+            resultados.append(
+                {
+                    "lag": lag,
+                    "correlacion": correlacion,
+                    "independiente": abs(correlacion) < ic,
+                }
+            )
 
         self.validaciones[f"{nombre}_autocorr"] = resultados
         return resultados
