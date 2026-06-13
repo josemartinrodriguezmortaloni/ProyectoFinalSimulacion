@@ -42,9 +42,35 @@ def _repo(config: ConfigPipeline) -> RepositorioArtefactos:
     return RepositorioArtefactos(config.raiz_artefactos)
 
 
+def _get_params_escenario(nombre: str):
+    from simulador.core.generacion import ParametrosClimaticos
+    if nombre == "crisis":
+        return ParametrosClimaticos(
+            media_precipitacion_mm=50.0,   # Sequía extrema de lluvias
+            desv_precipitacion_mm=15.0,    # Desviación ajustada para Gamma válida
+            media_fusion_mm=60.0,          # Baja nieve (debe ser >= 50.0 mín)
+            desv_fusion_mm=5.0,            # Poca varianza en nieve
+            media_afluente_m3s=8.0,        # Ríos casi secos
+            desv_afluente_m3s=2.0,         # Poca varianza
+            media_demanda_hm3=350.0,       # Alta demanda agrícola
+        )
+    if nombre == "sequia_total":
+        return ParametrosClimaticos(
+            media_precipitacion_mm=0.1,    # Cero lluvia
+            desv_precipitacion_mm=0.05,
+            media_fusion_mm=52.0,          # Suficientemente lejos del min=50.0 para no truncar la Normal
+            desv_fusion_mm=0.4,
+            media_afluente_m3s=0.5,        # Suficientemente lejos del 0 para no truncar
+            desv_afluente_m3s=0.1,
+            media_demanda_hm3=350.0,       # Alta demanda
+        )
+    return None  # Usa los defaults (normal)
+
+
 def _cmd_generar(args: argparse.Namespace) -> int:
     config = _config_desde_args(args)
-    generar.ejecutar(_repo(config), seed=args.seed, n_anios=args.anios)
+    params = _get_params_escenario(getattr(args, "escenario", "normal"))
+    generar.ejecutar(_repo(config), seed=args.seed, n_anios=args.anios, params=params)
     return 0
 
 
@@ -90,8 +116,9 @@ def _cmd_pipeline(args: argparse.Namespace) -> int:
     print("PIPELINE: generar → validar → convertir → simular → analizar")
     print("=" * 70)
 
-    print("\n[1/5] Generación de series")
-    id_corrida = generar.ejecutar(repo, seed=args.seed, n_anios=args.anios)
+    print(f"\n[1/5] Generación de series (Escenario: {getattr(args, 'escenario', 'normal')})")
+    params = _get_params_escenario(getattr(args, "escenario", "normal"))
+    id_corrida = generar.ejecutar(repo, seed=args.seed, n_anios=args.anios, params=params)
 
     print("\n[2/5] Validación estadística (gate)")
     reporte = validar.ejecutar(repo, id_corrida)
@@ -142,6 +169,7 @@ def construir_parser() -> argparse.ArgumentParser:
     parser_generar = subparsers.add_parser("generar", help="Fase 1: generar series")
     parser_generar.add_argument("--seed", type=int, default=42)
     parser_generar.add_argument("--anios", type=int, default=500)
+    parser_generar.add_argument("--escenario", choices=["normal", "crisis", "sequia_total"], default="normal", help="Escenario climático a generar")
     _agregar_arg_raiz(parser_generar)
     parser_generar.set_defaults(func=_cmd_generar)
 
@@ -185,6 +213,7 @@ def construir_parser() -> argparse.ArgumentParser:
     )
     parser_pipeline.add_argument("--seed", type=int, default=42)
     parser_pipeline.add_argument("--anios", type=int, default=500)
+    parser_pipeline.add_argument("--escenario", choices=["normal", "crisis", "sequia_total"], default="normal", help="Escenario climático a generar")
     parser_pipeline.add_argument(
         "--asignacion", choices=sorted(convertir.ASIGNACIONES), default=None
     )

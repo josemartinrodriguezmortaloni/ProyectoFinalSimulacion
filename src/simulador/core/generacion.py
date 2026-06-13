@@ -20,12 +20,12 @@ class ParametrosClimaticos:
     media_precipitacion_mm: float = 230.0
     desv_precipitacion_mm: float = 80.0
     max_precipitacion_mm: float = 600.0
-    media_fusion_mm: float = 150.0
-    desv_fusion_mm: float = 40.0
+    media_fusion_mm: float = 300.0
+    desv_fusion_mm: float = 80.0
     min_fusion_mm: float = 50.0
-    max_fusion_mm: float = 300.0
-    media_afluente_m3s: float = 30.0
-    desv_afluente_m3s: float = 10.0
+    max_fusion_mm: float = 600.0
+    media_afluente_m3s: float = 60.0
+    desv_afluente_m3s: float = 20.0
     media_demanda_hm3: float = 250.0
     desv_relativa_demanda: float = 0.15
     estacionalidad_demanda: tuple[float, ...] = (

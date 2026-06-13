@@ -3,3 +3,4 @@ __pycache__/
 .venv/
 resultados/
 .pytest_cache/
+artefactos/
