@@ -48,7 +48,7 @@ class ConfigPipeline:
     raiz_artefactos: Path = field(default_factory=lambda: Path("artefactos"))
     ruta_mdl: Path = field(
         default_factory=lambda: Path(
-            "modeloDinamico/ProyectoGlobalSimulacion(PrimerModeloTerminado).mdl"
+            "modeloDinamico/ProyectoGlobalSimulacion.mdl"
         )
     )
     diques: tuple[ConfigDique, ...] = DIQUES_MENDOZA
