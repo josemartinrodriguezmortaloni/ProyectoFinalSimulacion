@@ -45,10 +45,12 @@ class ManifestCorrida:
     version_pysd: str | None = None
 
     @staticmethod
-    def nuevo(seed: int, n_anios: int) -> "ManifestCorrida":
+    def nuevo(seed: int, n_anios: int, id_corrida: str | None = None) -> "ManifestCorrida":
         ahora = datetime.now()
+        if id_corrida is None:
+            id_corrida = f"{seed}_{ahora:%Y%m%d_%H%M%S}"
         return ManifestCorrida(
-            id_corrida=f"{seed}_{ahora:%Y%m%d_%H%M%S}",
+            id_corrida=id_corrida,
             seed=seed,
             n_anios=n_anios,
             creado=ahora.isoformat(timespec="seconds"),

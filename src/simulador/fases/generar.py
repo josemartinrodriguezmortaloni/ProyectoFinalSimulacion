@@ -12,12 +12,13 @@ def ejecutar(
     seed: int,
     n_anios: int,
     params: ParametrosClimaticos | None = None,
+    id_corrida: str | None = None,
 ) -> str:
     """Genera las series, crea la corrida y devuelve su ID."""
     rng = np.random.default_rng(seed)
     series = generar_series_climaticas(rng, n_anios, params)
 
-    manifest = ManifestCorrida.nuevo(seed=seed, n_anios=n_anios)
+    manifest = ManifestCorrida.nuevo(seed=seed, n_anios=n_anios, id_corrida=id_corrida)
     repo.crear_corrida(manifest)
     ruta = repo.escribir_series(manifest.id_corrida, series)
 

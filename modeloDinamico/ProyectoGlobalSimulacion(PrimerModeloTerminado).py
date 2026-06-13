@@ -1,5 +1,5 @@
 """
-Python model 'ProyectoGlobalSimulacion.py'
+Python model 'ProyectoGlobalSimulacion(PrimerModeloTerminado).py'
 Translated using PySD
 """
 
@@ -99,24 +99,342 @@ def time_step():
 
 
 @component.add(
-    name="Agua Del Toro Altura",
-    units="m",
+    name="Salida Riego Potre",
     comp_type="Auxiliary",
     comp_subtype="Normal",
     depends_on={
-        "agua_del_toro_cota_min": 1,
-        "agua_del_toro_hm3_por_metro": 1,
-        "agua_del_toro_volumen_embalse": 1,
+        "potrerillos_demanda_riego": 1,
+        "potrerillos_caudal_regulado": 1,
+        "potrerillos_prioridad_energia": 1,
     },
 )
-def agua_del_toro_altura():
-    """
-    Altura actual de la lámina de agua. A mayor altura, mayor potencia genera la turbina (la energía es proporcional a la altura de caída).
-    """
-    return (
-        agua_del_toro_cota_min()
-        + agua_del_toro_volumen_embalse() / agua_del_toro_hm3_por_metro()
+def salida_riego_potre():
+    return float(
+        np.minimum(
+            potrerillos_demanda_riego(),
+            float(
+                np.maximum(
+                    0,
+                    potrerillos_caudal_regulado()
+                    * (1 - potrerillos_prioridad_energia()),
+                )
+            ),
+        )
     )
+
+
+@component.add(
+    name="Agua Del Toro Salida Energia",
+    units="hm3/mes",
+    comp_type="Auxiliary",
+    comp_subtype="Normal",
+    depends_on={"agua_del_toro_caudal_regulado": 1, "agua_del_toro_salida_riego": 1},
+)
+def agua_del_toro_salida_energia():
+    return float(
+        np.maximum(0, agua_del_toro_caudal_regulado() - agua_del_toro_salida_riego())
+    )
+
+
+@component.add(
+    name="Agua Del Toro Caudal Regulado",
+    comp_type="Auxiliary",
+    comp_subtype="Normal",
+    depends_on={
+        "agua_del_toro_disponible": 1,
+        "agua_del_toro_porcentaje_capacidad": 1,
+        "agua_del_toro_entrada_agua": 1,
+    },
+)
+def agua_del_toro_caudal_regulado():
+    """
+    Embalse en 65% (objetivo): libera exactamente el caudal entrante Embalse en 90% (muy lleno): libera hasta 50 hm³ extra para hacer espacio Embalse en 40% (bajo): libera hasta 50 hm³ menos para conservar agua
+    """
+    return float(
+        np.minimum(
+            agua_del_toro_disponible(),
+            float(
+                np.maximum(
+                    0,
+                    agua_del_toro_entrada_agua()
+                    + (agua_del_toro_porcentaje_capacidad() - 0.65) * 40,
+                )
+            ),
+        )
+    )
+
+
+@component.add(
+    name="Nihuil Caudal Regulado",
+    comp_type="Auxiliary",
+    comp_subtype="Normal",
+    depends_on={
+        "nihuil_disponible": 1,
+        "nihuil_porcentaje_capacidad": 1,
+        "nihuil_entrada_agua": 1,
+    },
+)
+def nihuil_caudal_regulado():
+    """
+    Embalse en 65% (objetivo): libera exactamente el caudal entrante Embalse en 90% (muy lleno): libera hasta 50 hm³ extra para hacer espacio Embalse en 40% (bajo): libera hasta 50 hm³ menos para conservar agua
+    """
+    return float(
+        np.minimum(
+            nihuil_disponible(),
+            float(
+                np.maximum(
+                    0,
+                    nihuil_entrada_agua() + (nihuil_porcentaje_capacidad() - 0.65) * 30,
+                )
+            ),
+        )
+    )
+
+
+@component.add(
+    name="Salida Energia Potrerillos",
+    units="hm3/mes",
+    comp_type="Auxiliary",
+    comp_subtype="Normal",
+    depends_on={"potrerillos_caudal_regulado": 1, "salida_riego_potre": 1},
+)
+def salida_energia_potrerillos():
+    """
+    Agua turbinada en la central hidroeléctrica de Potrerillos (315 MW instalados). Es lo que queda disponible después de satisfacer riego, limitado por la fracción de prioridad energética.
+    """
+    return float(np.maximum(0, potrerillos_caudal_regulado() - salida_riego_potre()))
+
+
+@component.add(
+    name="Potrerillos Caudal Regulado",
+    comp_type="Auxiliary",
+    comp_subtype="Normal",
+    depends_on={
+        "potrerillos_disponible": 1,
+        "potrerillos_porcentaje_capacidad": 1,
+        "entrada_agua_potrerillos": 1,
+    },
+)
+def potrerillos_caudal_regulado():
+    """
+    Embalse en 65% (objetivo): libera exactamente el caudal entrante Embalse en 90% (muy lleno): libera hasta 50 hm³ extra para hacer espacio Embalse en 40% (bajo): libera hasta 50 hm³ menos para conservar agua
+    """
+    return float(
+        np.minimum(
+            potrerillos_disponible(),
+            float(
+                np.maximum(
+                    0,
+                    entrada_agua_potrerillos()
+                    + (potrerillos_porcentaje_capacidad() - 0.65) * 200,
+                )
+            ),
+        )
+    )
+
+
+@component.add(
+    name="Agua Del Toro Entrada Agua",
+    units="hm3/mes",
+    comp_type="Auxiliary",
+    comp_subtype="with Lookup",
+    depends_on={"mes_actual": 1},
+)
+def agua_del_toro_entrada_agua():
+    return np.interp(
+        mes_actual(),
+        [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+        [95, 110, 90, 70, 55, 45, 40, 48, 68, 88, 110, 120],
+    )
+
+
+@component.add(
+    name="Nihuil Entrada Agua",
+    units="hm3/mes",
+    comp_type="Auxiliary",
+    comp_subtype="with Lookup",
+    depends_on={"mes_actual": 1},
+)
+def nihuil_entrada_agua():
+    return np.interp(
+        mes_actual(),
+        [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+        [80, 90, 70, 55, 45, 35, 30, 38, 55, 70, 88, 95],
+    )
+
+
+@component.add(
+    name="Carrizal Salida Riego",
+    units="hm3/mes",
+    comp_type="Auxiliary",
+    comp_subtype="Normal",
+    depends_on={
+        "carrizal_demanda_riego": 1,
+        "carrizal_caudal_regulado": 1,
+        "carrizal_prioridad_energia": 1,
+    },
+)
+def carrizal_salida_riego():
+    return float(
+        np.minimum(
+            carrizal_demanda_riego(),
+            float(
+                np.maximum(
+                    0, carrizal_caudal_regulado() * (1 - carrizal_prioridad_energia())
+                )
+            ),
+        )
+    )
+
+
+@component.add(
+    name="Carrizal Caudal Regulado",
+    comp_type="Auxiliary",
+    comp_subtype="Normal",
+    depends_on={
+        "carrizal_disponible": 1,
+        "carrizal_entrada_agua": 1,
+        "carrizal_porcentaje_capacidad": 1,
+    },
+)
+def carrizal_caudal_regulado():
+    """
+    Embalse en 65% (objetivo): libera exactamente el caudal entrante Embalse en 90% (muy lleno): libera hasta 50 hm³ extra para hacer espacio Embalse en 40% (bajo): libera hasta 50 hm³ menos para conservar agua
+    """
+    return float(
+        np.minimum(
+            carrizal_disponible(),
+            float(
+                np.maximum(
+                    0,
+                    carrizal_entrada_agua()
+                    + (carrizal_porcentaje_capacidad() - 0.65) * 25,
+                )
+            ),
+        )
+    )
+
+
+@component.add(
+    name="Entrada Agua Potrerillos",
+    units="hm3/mes",
+    comp_type="Auxiliary",
+    comp_subtype="with Lookup",
+    depends_on={"mes_actual": 1},
+)
+def entrada_agua_potrerillos():
+    return np.interp(
+        mes_actual(),
+        [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+        [300, 350, 280, 220, 170, 140, 120, 130, 180, 240, 320, 370],
+    )
+
+
+@component.add(
+    name="Nihuil Salida Riego",
+    units="hm3/mes",
+    comp_type="Auxiliary",
+    comp_subtype="Normal",
+    depends_on={
+        "nihuil_demanda_riego": 1,
+        "nihuil_caudal_regulado": 1,
+        "nihuil_prioridad_energia": 1,
+    },
+)
+def nihuil_salida_riego():
+    return float(
+        np.minimum(
+            nihuil_demanda_riego(),
+            float(
+                np.maximum(
+                    0, nihuil_caudal_regulado() * (1 - nihuil_prioridad_energia())
+                )
+            ),
+        )
+    )
+
+
+@component.add(
+    name="Agua Del Toro Salida Riego",
+    units="hm3/mes",
+    comp_type="Auxiliary",
+    comp_subtype="Normal",
+    depends_on={
+        "agua_del_toro_demanda_riego": 1,
+        "agua_del_toro_caudal_regulado": 1,
+        "agua_del_toro_prioridad_energia": 1,
+    },
+)
+def agua_del_toro_salida_riego():
+    return float(
+        np.minimum(
+            agua_del_toro_demanda_riego(),
+            float(
+                np.maximum(
+                    0,
+                    agua_del_toro_caudal_regulado()
+                    * (1 - agua_del_toro_prioridad_energia()),
+                )
+            ),
+        )
+    )
+
+
+@component.add(
+    name="Carrizal Entrada Agua",
+    units="hm3/mes",
+    comp_type="Auxiliary",
+    comp_subtype="with Lookup",
+    depends_on={"mes_actual": 1},
+)
+def carrizal_entrada_agua():
+    return np.interp(
+        mes_actual(),
+        [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+        [65, 75, 60, 48, 35, 28, 25, 30, 45, 60, 75, 80],
+    )
+
+
+@component.add(
+    name="Carrizal Salida Energia",
+    units="hm3/mes",
+    comp_type="Auxiliary",
+    comp_subtype="Normal",
+    depends_on={"carrizal_caudal_regulado": 1, "carrizal_salida_riego": 1},
+)
+def carrizal_salida_energia():
+    """
+    Agua turbinada en la central hidroeléctrica de Potrerillos (315 MW instalados). Es lo que queda disponible después de satisfacer riego, limitado por la fracción de prioridad energética.
+    """
+    return float(np.maximum(0, carrizal_caudal_regulado() - carrizal_salida_riego()))
+
+
+@component.add(
+    name="Nihuil Salida Energia",
+    units="hm3/mes",
+    comp_type="Auxiliary",
+    comp_subtype="Normal",
+    depends_on={"nihuil_caudal_regulado": 1, "nihuil_salida_riego": 1},
+)
+def nihuil_salida_energia():
+    """
+    Agua turbinada en la central hidroeléctrica de Potrerillos (315 MW instalados). Es lo que queda disponible después de satisfacer riego, limitado por la fracción de prioridad energética.
+    """
+    return float(np.maximum(0, nihuil_caudal_regulado() - nihuil_salida_riego()))
+
+
+@component.add(
+    name="Agua Del Toro Cabeza Neta",
+    units="m",
+    comp_type="Auxiliary",
+    comp_subtype="Normal",
+    depends_on={"agua_del_toro_porcentaje_capacidad": 1},
+)
+def agua_del_toro_cabeza_neta():
+    """
+    Energía hidráulica real y efectiva de Agua del Toro disponible para generar electricidad. Mínimo 60 m, máximo 180 m.
+    """
+    return 60 + 120 * agua_del_toro_porcentaje_capacidad()
 
 
 @component.add(
@@ -146,19 +464,6 @@ def agua_del_toro_consumo_urbano():
 
 
 @component.add(
-    name="Agua Del Toro Cota Min",
-    units="m",
-    comp_type="Constant",
-    comp_subtype="Normal",
-)
-def agua_del_toro_cota_min():
-    """
-    Cota mínima operacional del embalse (metros sobre el nivel del mar). Embalse de alta montaña sobre el Río Diamante.
-    """
-    return 1505
-
-
-@component.add(
     name="Agua Del Toro Demanda Riego",
     units="hm3/mes",
     comp_type="Auxiliary",
@@ -172,7 +477,7 @@ def agua_del_toro_demanda_riego():
     return np.interp(
         mes_actual(),
         [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
-        [180, 198, 189, 126, 72, 63, 63, 90, 144, 180, 207, 189],
+        [84, 92, 88, 59, 34, 29, 29, 42, 67, 84, 96, 88],
     )
 
 
@@ -190,13 +495,6 @@ def agua_del_toro_disponible():
     return float(
         np.maximum(0, agua_del_toro_volumen_embalse() - agua_del_toro_vol_min())
     )
-
-
-@component.add(
-    name="Agua Del Toro Entrada Agua", comp_type="Constant", comp_subtype="Normal"
-)
-def agua_del_toro_entrada_agua():
-    return 65
 
 
 @component.add(
@@ -218,35 +516,13 @@ def agua_del_toro_evaporacion():
     units="GWh/mes",
     comp_type="Auxiliary",
     comp_subtype="Normal",
-    depends_on={
-        "agua_del_toro_salida_energia": 1,
-        "agua_del_toro_altura": 1,
-        "agua_del_toro_cota_min": 1,
-    },
+    depends_on={"agua_del_toro_salida_energia": 1, "agua_del_toro_cabeza_neta": 1},
 )
 def agua_del_toro_generacion_gwh():
     """
     Energía generada mensualmente. Fórmula hidráulica: Potencia [kW] = 9.81 × Q[m³/s] × H[m]. Convertida a GWh. Alta montaña = mayor altura de caída = más eficiencia energética.
     """
-    return (
-        agua_del_toro_salida_energia()
-        * 0.00981
-        * (agua_del_toro_altura() - agua_del_toro_cota_min())
-        / 1000
-    )
-
-
-@component.add(
-    name="Agua Del Toro hm3 por metro",
-    units="hm3/m",
-    comp_type="Constant",
-    comp_subtype="Normal",
-)
-def agua_del_toro_hm3_por_metro():
-    """
-    Relación volumen-altura.
-    """
-    return 2.96
+    return agua_del_toro_salida_energia() * 0.002314 * agua_del_toro_cabeza_neta()
 
 
 @component.add(
@@ -280,57 +556,6 @@ def agua_del_toro_prioridad_energia():
         lambda: if_then_else(
             agua_del_toro_porcentaje_capacidad() < 0.4, lambda: 0.1, lambda: 0.35
         ),
-    )
-
-
-@component.add(
-    name="Agua Del Toro Salida Energia",
-    units="hm3/mes",
-    comp_type="Auxiliary",
-    comp_subtype="Normal",
-    depends_on={
-        "agua_del_toro_disponible": 2,
-        "agua_del_toro_salida_riego": 1,
-        "agua_del_toro_prioridad_energia": 1,
-    },
-)
-def agua_del_toro_salida_energia():
-    return float(
-        np.maximum(
-            0,
-            float(
-                np.minimum(
-                    agua_del_toro_disponible() - agua_del_toro_salida_riego(),
-                    agua_del_toro_disponible() * agua_del_toro_prioridad_energia(),
-                )
-            ),
-        )
-    )
-
-
-@component.add(
-    name="Agua Del Toro Salida Riego",
-    units="hm3/mes",
-    comp_type="Auxiliary",
-    comp_subtype="Normal",
-    depends_on={
-        "agua_del_toro_demanda_riego": 1,
-        "agua_del_toro_prioridad_energia": 1,
-        "agua_del_toro_disponible": 1,
-    },
-)
-def agua_del_toro_salida_riego():
-    return float(
-        np.minimum(
-            agua_del_toro_demanda_riego(),
-            float(
-                np.maximum(
-                    0,
-                    agua_del_toro_disponible()
-                    * (1 - agua_del_toro_prioridad_energia()),
-                )
-            ),
-        )
     )
 
 
@@ -414,21 +639,17 @@ _integ_agua_del_toro_volumen_embalse = Integ(
 
 
 @component.add(
-    name="Carrizal Altura",
+    name="Carrizal Cabeza Neta",
     units="m",
     comp_type="Auxiliary",
     comp_subtype="Normal",
-    depends_on={
-        "carrizal_cota_min": 1,
-        "carrizal_hm3_por_metro": 1,
-        "carrizal_volumen_embalse": 1,
-    },
+    depends_on={"carrizal_porcentaje_capacidad": 1},
 )
-def carrizal_altura():
+def carrizal_cabeza_neta():
     """
-    Altura actual de la lámina de agua. A mayor altura, mayor potencia genera la turbina (la energía es proporcional a la altura de caída).
+    Energía hidráulica real y efectiva del Carrizal disponible para generar electricidad. Mínimo 30 m, máximo 100 m.
     """
-    return carrizal_cota_min() + carrizal_volumen_embalse() / carrizal_hm3_por_metro()
+    return 30 + 70 * carrizal_porcentaje_capacidad()
 
 
 @component.add(
@@ -455,16 +676,6 @@ def carrizal_consumo_urbano():
 
 
 @component.add(
-    name="Carrizal Cota Min", units="m", comp_type="Constant", comp_subtype="Normal"
-)
-def carrizal_cota_min():
-    """
-    Cota mínima operacional del embalse (metros sobre el nivel del mar).
-    """
-    return 855
-
-
-@component.add(
     name="Carrizal Demanda Riego",
     units="hm3/mes",
     comp_type="Auxiliary",
@@ -478,7 +689,7 @@ def carrizal_demanda_riego():
     return np.interp(
         mes_actual(),
         [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
-        [120, 132, 126, 84, 48, 42, 42, 60, 96, 120, 138, 126],
+        [50, 55, 52, 35, 20, 17, 17, 25, 40, 50, 58, 52],
     )
 
 
@@ -494,13 +705,6 @@ def carrizal_disponible():
     Agua realmente disponible para erogar (total menos el volumen muerto). Garantiza que el embalse nunca quede completamente vacío.
     """
     return float(np.maximum(0, carrizal_volumen_embalse() - carrizal_vol_min()))
-
-
-@component.add(
-    name="Carrizal Entrada Agua", comp_type="Constant", comp_subtype="Normal"
-)
-def carrizal_entrada_agua():
-    return 45
 
 
 @component.add(
@@ -522,35 +726,13 @@ def carrizal_evaporacion():
     units="GWh/mes",
     comp_type="Auxiliary",
     comp_subtype="Normal",
-    depends_on={
-        "carrizal_salida_energia": 1,
-        "carrizal_cota_min": 1,
-        "carrizal_altura": 1,
-    },
+    depends_on={"carrizal_salida_energia": 1, "carrizal_cabeza_neta": 1},
 )
 def carrizal_generacion_gwh():
     """
     Energía generada mensualmente. Fórmula hidráulica: Potencia [kW] = 9.81 × Q[m³/s] × H[m]. Convertida a GWh.
     """
-    return (
-        carrizal_salida_energia()
-        * 0.00981
-        * (carrizal_altura() - carrizal_cota_min())
-        / 1000
-    )
-
-
-@component.add(
-    name="Carrizal hm3 por metro",
-    units="hm3/m",
-    comp_type="Constant",
-    comp_subtype="Normal",
-)
-def carrizal_hm3_por_metro():
-    """
-    Relación volumen-altura.
-    """
-    return 1.52
+    return carrizal_salida_energia() * 0.002314 * carrizal_cabeza_neta()
 
 
 @component.add(
@@ -584,58 +766,6 @@ def carrizal_prioridad_energia():
         lambda: if_then_else(
             carrizal_porcentaje_capacidad() < 0.4, lambda: 0.05, lambda: 0.2
         ),
-    )
-
-
-@component.add(
-    name="Carrizal Salida Energia",
-    units="hm3/mes",
-    comp_type="Auxiliary",
-    comp_subtype="Normal",
-    depends_on={
-        "carrizal_disponible": 2,
-        "carrizal_salida_riego": 1,
-        "carrizal_prioridad_energia": 1,
-    },
-)
-def carrizal_salida_energia():
-    """
-    Agua turbinada en la central hidroeléctrica de Potrerillos (315 MW instalados). Es lo que queda disponible después de satisfacer riego, limitado por la fracción de prioridad energética.
-    """
-    return float(
-        np.maximum(
-            0,
-            float(
-                np.minimum(
-                    carrizal_disponible() - carrizal_salida_riego(),
-                    carrizal_disponible() * carrizal_prioridad_energia(),
-                )
-            ),
-        )
-    )
-
-
-@component.add(
-    name="Carrizal Salida Riego",
-    units="hm3/mes",
-    comp_type="Auxiliary",
-    comp_subtype="Normal",
-    depends_on={
-        "carrizal_demanda_riego": 1,
-        "carrizal_prioridad_energia": 1,
-        "carrizal_disponible": 1,
-    },
-)
-def carrizal_salida_riego():
-    return float(
-        np.minimum(
-            carrizal_demanda_riego(),
-            float(
-                np.maximum(
-                    0, carrizal_disponible() * (1 - carrizal_prioridad_energia())
-                )
-            ),
-        )
     )
 
 
@@ -800,13 +930,6 @@ def eficiencia_riego():
 
 
 @component.add(
-    name="Entrada Agua Potrerillos", comp_type="Constant", comp_subtype="Normal"
-)
-def entrada_agua_potrerillos():
-    return 135
-
-
-@component.add(
     name="Evaporacion Potrerillos",
     units="hm3/mes",
     comp_type="Auxiliary",
@@ -835,21 +958,17 @@ def mes_actual():
 
 
 @component.add(
-    name="Nihuil Altura",
+    name="Nihuil Cabeza Neta",
     units="m",
     comp_type="Auxiliary",
     comp_subtype="Normal",
-    depends_on={
-        "nihuil_cota_min": 1,
-        "nihuil_volumen_embalse": 1,
-        "nihuil_hm3_por_metro": 1,
-    },
+    depends_on={"nihuil_porcentaje_capacidad": 1},
 )
-def nihuil_altura():
+def nihuil_cabeza_neta():
     """
-    Altura actual de la lámina de agua. A mayor altura, mayor potencia genera la turbina (la energía es proporcional a la altura de caída).
+    Energía hidráulica real y efectiva del Nihuil disponible para generar electricidad. Mínimo 40 m, máximo 150 m.
     """
-    return nihuil_cota_min() + nihuil_volumen_embalse() / nihuil_hm3_por_metro()
+    return 40 + 110 * nihuil_porcentaje_capacidad()
 
 
 @component.add(
@@ -876,16 +995,6 @@ def nihuil_consumo_urbano():
 
 
 @component.add(
-    name="Nihuil Cota Min", units="m", comp_type="Constant", comp_subtype="Normal"
-)
-def nihuil_cota_min():
-    """
-    Cota mínima operacional del embalse (metros sobre el nivel del mar).
-    """
-    return 1348
-
-
-@component.add(
     name="Nihuil Demanda Riego",
     units="hm3/mes",
     comp_type="Auxiliary",
@@ -899,7 +1008,7 @@ def nihuil_demanda_riego():
     return np.interp(
         mes_actual(),
         [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
-        [130, 143, 136, 91, 52, 45, 45, 65, 104, 130, 149, 136],
+        [65, 71, 68, 45, 26, 22, 22, 32, 52, 65, 74, 68],
     )
 
 
@@ -915,11 +1024,6 @@ def nihuil_disponible():
     Agua realmente disponible para erogar (total menos el volumen muerto). Garantiza que el embalse nunca quede completamente vacío.
     """
     return float(np.maximum(0, nihuil_volumen_embalse() - nihuil_vol_min()))
-
-
-@component.add(name="Nihuil Entrada Agua", comp_type="Constant", comp_subtype="Normal")
-def nihuil_entrada_agua():
-    return 55
 
 
 @component.add(
@@ -941,28 +1045,13 @@ def nihuil_evaporacion():
     units="GWh/mes",
     comp_type="Auxiliary",
     comp_subtype="Normal",
-    depends_on={"nihuil_salida_energia": 1, "nihuil_cota_min": 1, "nihuil_altura": 1},
+    depends_on={"nihuil_salida_energia": 1, "nihuil_cabeza_neta": 1},
 )
 def nihuil_generacion_gwh():
     """
     Energía generada mensualmente. Fórmula hidráulica: Potencia [kW] = 9.81 × Q[m³/s] × H[m]. Convertida a GWh.
     """
-    return (
-        nihuil_salida_energia() * 0.00981 * (nihuil_altura() - nihuil_cota_min()) / 1000
-    )
-
-
-@component.add(
-    name="Nihuil hm3 por metro",
-    units="hm3/m",
-    comp_type="Constant",
-    comp_subtype="Normal",
-)
-def nihuil_hm3_por_metro():
-    """
-    Relación volumen-altura.
-    """
-    return 3.2
+    return nihuil_salida_energia() * 0.002314 * nihuil_cabeza_neta()
 
 
 @component.add(
@@ -996,56 +1085,6 @@ def nihuil_prioridad_energia():
         lambda: if_then_else(
             nihuil_porcentaje_capacidad() < 0.4, lambda: 0.1, lambda: 0.35
         ),
-    )
-
-
-@component.add(
-    name="Nihuil Salida Energia",
-    units="hm3/mes",
-    comp_type="Auxiliary",
-    comp_subtype="Normal",
-    depends_on={
-        "nihuil_disponible": 2,
-        "nihuil_salida_riego": 1,
-        "nihuil_prioridad_energia": 1,
-    },
-)
-def nihuil_salida_energia():
-    """
-    Agua turbinada en la central hidroeléctrica de Potrerillos (315 MW instalados). Es lo que queda disponible después de satisfacer riego, limitado por la fracción de prioridad energética.
-    """
-    return float(
-        np.maximum(
-            0,
-            float(
-                np.minimum(
-                    nihuil_disponible() - nihuil_salida_riego(),
-                    nihuil_disponible() * nihuil_prioridad_energia(),
-                )
-            ),
-        )
-    )
-
-
-@component.add(
-    name="Nihuil Salida Riego",
-    units="hm3/mes",
-    comp_type="Auxiliary",
-    comp_subtype="Normal",
-    depends_on={
-        "nihuil_demanda_riego": 1,
-        "nihuil_disponible": 1,
-        "nihuil_prioridad_energia": 1,
-    },
-)
-def nihuil_salida_riego():
-    return float(
-        np.minimum(
-            nihuil_demanda_riego(),
-            float(
-                np.maximum(0, nihuil_disponible() * (1 - nihuil_prioridad_energia()))
-            ),
-        )
     )
 
 
@@ -1121,24 +1160,17 @@ _integ_nihuil_volumen_embalse = Integ(
 
 
 @component.add(
-    name="Potrerillos Altura",
+    name="Potrerillos Cabeza Neta",
     units="m",
     comp_type="Auxiliary",
     comp_subtype="Normal",
-    depends_on={
-        "potrerillos_cota_min": 1,
-        "volumen_embalse_potrerillos": 1,
-        "potrerillos_hm3_por_metro": 1,
-    },
+    depends_on={"potrerillos_porcentaje_capacidad": 1},
 )
-def potrerillos_altura():
+def potrerillos_cabeza_neta():
     """
-    Altura actual de la lámina de agua. A mayor altura, mayor potencia genera la turbina (la energía es proporcional a la altura de caída).
+    Energía hidráulica real y efectiva de Potrerillos disponible para generar electricidad. Mínimo 40 m, máximo 150 m. Mínimo 150 m (embalse casi vacío), máximo 350 m (embalse lleno). Rango realista para una central de 315 MW.
     """
-    return (
-        potrerillos_cota_min()
-        + volumen_embalse_potrerillos() / potrerillos_hm3_por_metro()
-    )
+    return 150 + 200 * potrerillos_porcentaje_capacidad()
 
 
 @component.add(
@@ -1149,16 +1181,6 @@ def potrerillos_cap_max():
     Capacidad máxima del embalse Potrerillos.
     """
     return 1885
-
-
-@component.add(
-    name="Potrerillos Cota Min", units="m", comp_type="Constant", comp_subtype="Normal"
-)
-def potrerillos_cota_min():
-    """
-    Cota mínima operacional del embalse (metros sobre el nivel del mar).
-    """
-    return 970
 
 
 @component.add(
@@ -1198,35 +1220,13 @@ def potrerillos_disponible():
     units="GWh/mes",
     comp_type="Auxiliary",
     comp_subtype="Normal",
-    depends_on={
-        "salida_energia_potrerillos": 1,
-        "potrerillos_altura": 1,
-        "potrerillos_cota_min": 1,
-    },
+    depends_on={"salida_energia_potrerillos": 1, "potrerillos_cabeza_neta": 1},
 )
 def potrerillos_generacion_gwh():
     """
     Energía generada mensualmente. Fórmula hidráulica: Potencia [kW] = 9.81 × Q[m³/s] × H[m]. Convertida a GWh. A plena capacidad Potrerillos puede generar 220 GWh/mes.
     """
-    return (
-        salida_energia_potrerillos()
-        * 0.00981
-        * (potrerillos_altura() - potrerillos_cota_min())
-        / 1000
-    )
-
-
-@component.add(
-    name="Potrerillos hm3 por metro",
-    units="hm3/m",
-    comp_type="Constant",
-    comp_subtype="Normal",
-)
-def potrerillos_hm3_por_metro():
-    """
-    Relación volumen-altura.
-    """
-    return 7.86
+    return salida_energia_potrerillos() * 0.002314 * potrerillos_cabeza_neta()
 
 
 @component.add(
@@ -1306,57 +1306,6 @@ def precio_mwh():
     Precio promedio de venta de energía eléctrica en el mercado mayorista argentino
     """
     return 80
-
-
-@component.add(
-    name="Salida Energia Potrerillos",
-    units="hm3/mes",
-    comp_type="Auxiliary",
-    comp_subtype="Normal",
-    depends_on={
-        "potrerillos_disponible": 2,
-        "salida_riego_potre": 1,
-        "potrerillos_prioridad_energia": 1,
-    },
-)
-def salida_energia_potrerillos():
-    """
-    Agua turbinada en la central hidroeléctrica de Potrerillos (315 MW instalados). Es lo que queda disponible después de satisfacer riego, limitado por la fracción de prioridad energética.
-    """
-    return float(
-        np.maximum(
-            0,
-            float(
-                np.minimum(
-                    potrerillos_disponible() - salida_riego_potre(),
-                    potrerillos_disponible() * potrerillos_prioridad_energia(),
-                )
-            ),
-        )
-    )
-
-
-@component.add(
-    name="Salida Riego Potre",
-    comp_type="Auxiliary",
-    comp_subtype="Normal",
-    depends_on={
-        "potrerillos_demanda_riego": 1,
-        "potrerillos_disponible": 1,
-        "potrerillos_prioridad_energia": 1,
-    },
-)
-def salida_riego_potre():
-    return float(
-        np.minimum(
-            potrerillos_demanda_riego(),
-            float(
-                np.maximum(
-                    0, potrerillos_disponible() * (1 - potrerillos_prioridad_energia())
-                )
-            ),
-        )
-    )
 
 
 @component.add(
