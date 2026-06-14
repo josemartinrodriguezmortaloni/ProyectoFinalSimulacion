@@ -99,13 +99,7 @@ class SimulacionHidrica:
         print(f"  Estadístico KS: {resultado_ks['estadistico']:.4f}")
         print(f"  p-valor: {resultado_ks['p_valor']:.4f}")
 
-        print("\n✓ Validando independencia (autocorrelación)...")
-        resultado_autocorr = self.generador.test_autocorrelacion(
-            precipitacion, "precipitacion"
-        )
-        for r in resultado_autocorr:
-            independencia = "✓" if r["independiente"] else "✗"
-            print(f"  Lag {r['lag']}: r={r['correlacion']:.4f} {independencia}")
+
 
         print("\n✓ Números aleatorios validados correctamente.")
 

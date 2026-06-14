@@ -16,7 +16,7 @@ flowchart LR
     V -.->|rechazo: exit 1| X[pipeline corta]
 ```
 
-La fase 2 es un **quality gate**: si los números generados no superan los tests (Chi-cuadrada, Kolmogorov-Smirnov, autocorrelación), el pipeline se detiene y nunca se simula con datos inválidos.
+La fase 2 es un **quality gate**: si los números generados no superan los tests (Chi-cuadrada, Kolmogorov-Smirnov), el pipeline se detiene y nunca se simula con datos inválidos.
 
 ### Estructura del código
 

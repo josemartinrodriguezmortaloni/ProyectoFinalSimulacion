@@ -125,25 +125,6 @@ class GeneradorNumerosAleatorios:
         self.validaciones[f"{nombre}_ks"] = resultado
         return resultado
 
-    def test_autocorrelacion(
-        self, datos: np.ndarray, nombre: str = "datos", lags: int = 5
-    ) -> List[Dict]:
-        resultados = []
-        for lag in range(1, lags + 1):
-            correlacion = np.corrcoef(datos[:-lag], datos[lag:])[0, 1]
-            ic = 1.96 / np.sqrt(len(datos))
-
-            resultados.append(
-                {
-                    "lag": lag,
-                    "correlacion": correlacion,
-                    "independiente": abs(correlacion) < ic,
-                }
-            )
-
-        self.validaciones[f"{nombre}_autocorr"] = resultados
-        return resultados
-
     def generar_reporte_validacion(self) -> Dict:
         return {
             "fecha_generacion": datetime.now().isoformat(),

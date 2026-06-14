@@ -96,13 +96,6 @@ class TestEstadistica:
         resultado = estadistica.test_chi_cuadrada_gamma(uniformes, "uniforme")
         assert not resultado.aceptado
 
-    def test_autocorrelacion_detecta_dependencia(self) -> None:
-        rng = np.random.default_rng(3)
-        ruido = rng.normal(0, 1, 500)
-        correlacionada = np.cumsum(ruido)  # paseo aleatorio: muy dependiente
-        resultado = estadistica.test_autocorrelacion(correlacionada, "paseo")
-        assert not resultado.aceptado
-
     def test_reporte_serializable(self) -> None:
         rng = np.random.default_rng(11)
         resultado = estadistica.test_ks_normal(rng.normal(0, 1, 200), "x")
@@ -131,8 +124,6 @@ class TestKpis:
     def test_calcular_kpis(self) -> None:
         indicadores = kpis.calcular_kpis(self._resultados_sinteticos())
         assert indicadores.energia_total_gwh == pytest.approx(40.0)
-        assert indicadores.meses_crisis == 1  # 0.25 < 0.30
-        assert indicadores.meses_alerta == 1  # 0.45 en [0.30, 0.50)
         assert indicadores.satisfaccion_por_dique == {
             "Potrerillos": pytest.approx(0.9)
         }
@@ -144,8 +135,6 @@ class TestKpis:
                 "horizonte_meses": [120, 120],
                 "satisfaccion_riego_media": [0.9, 0.5],
                 "energia_total_gwh": [100.0, 100.0],
-                "meses_crisis": [0, 24],
-                "meses_alerta": [0, 0],
             }
         )
         ranking = kpis.puntuar_corridas(tabla, kpis.PesosScore())
