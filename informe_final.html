@@ -67,9 +67,22 @@
     <h1>Informe Técnico del Proyecto Final de Simulación</h1>
     <p style="text-align: center; font-style: italic;">Optimización de la Distribución Hídrica en Mendoza mediante Modelado Dinámico y Simulación Estocástica</p>
 
-    <h2>1. Introducción al Proyecto</h2>
-    <p>El presente proyecto de simulación tiene como objetivo analizar y optimizar el uso del recurso hídrico en la provincia de Mendoza. La gestión del agua representa un desafío multiobjetivo donde se debe balancear la <strong>generación de energía hidroeléctrica</strong> con la <strong>satisfacción de la demanda de riego agrícola</strong>.</p>
-    <p>Para lograr este análisis, el proyecto propone una arquitectura híbrida de vanguardia: utiliza un modelo de Dinámica de Sistemas construido en <strong>Vensim</strong> para emular el comportamiento físico de los embalses, y un entorno en <strong>Python</strong> para la generación de series climáticas pseudoaleatorias, validación estadística, control de escenarios y orquestación masiva.</p>
+    <h2>1. Introducción y Contexto del Proyecto</h2>
+    
+    <h3>¿Qué sistema real se está representando?</h3>
+    <p>El simulador representa la <strong>red hidrológica y de embalses de la provincia de Mendoza</strong>. Específicamente, modela el comportamiento físico e interconectado de los cuatro diques principales de la provincia: Potrerillos (Río Mendoza), El Carrizal (Río Tunuyán), El Nihuil (Río Atuel) y Agua del Toro (Río Diamante). El modelo abarca desde los aportes naturales de agua (precipitaciones y deshielo cordillerano estocástico) hasta las restricciones de almacenamiento de las presas y el consumo en los distintos oasis productivos.</p>
+
+    <h3>¿Qué problema se quiere analizar o mejorar?</h3>
+    <p>El problema central radica en la <strong>distribución óptima de un recurso escaso</strong> bajo condiciones de incertidumbre climática. El simulador busca analizar y mejorar el equilibrio (trade-off) entre dos grandes objetivos que compiten por el agua:</p>
+    <ul>
+        <li>La liberación masiva de agua en verano para maximizar la <strong>satisfacción de la demanda de riego agrícola</strong> (vital para la economía vitivinícola).</li>
+        <li>La retención y liberación constante de agua durante todo el año aprovechando la altura de caída para maximizar la <strong>generación de energía hidroeléctrica</strong> (vital para la rentabilidad del sistema eléctrico).</li>
+    </ul>
+
+    <h3>¿Por qué es relevante simular este caso?</h3>
+    <p>Mendoza atraviesa una megasequía histórica producto del cambio climático, alternada esporádicamente por eventos extremos como El Niño. Dado que experimentar con las compuertas reales de los diques puede provocar inundaciones catastróficas, falta de suministro urbano o la pérdida de cosechas enteras por sequía artificial, <strong>simular estocásticamente el sistema es la única forma segura, rápida y económica de probar nuevas políticas públicas</strong>. Esta herramienta permite a los tomadores de decisiones proyectar los próximos 120 meses bajo diferentes reglas de asignación, enfrentando el sistema físico a cientos de años de escenarios climáticos sintéticos generados en Python.</p>
+    
+    <p>Para lograr este análisis, el proyecto propone una arquitectura híbrida de vanguardia: utiliza el modelo de Dinámica de Sistemas construido en <strong>Vensim</strong> para emular el comportamiento físico de la infraestructura, y un entorno en <strong>Python</strong> para la generación de series pseudoaleatorias, validación estadística y orquestación masiva.</p>
 
     <div style="text-align: center; margin: 30px 0;">
         <a href="dashboard.html" style="background-color: #2ecc71; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 6px rgba(46, 204, 113, 0.3);">📊 Abrir Dashboard Interactivo de CSVs</a>
