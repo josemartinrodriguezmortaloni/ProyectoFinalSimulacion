@@ -41,7 +41,7 @@ class ConfigPipeline:
     """Configuración del pipeline batch (diseño por artefactos)."""
 
     seed: int = 42
-    n_anios: int = 500
+    n_anios: int = 50
     horizonte_meses: int = 120  # FINAL TIME del .mdl
     asignacion: str = "uniforme"
     area_cuenca_total_m2: float = 5_600_000_000
@@ -57,8 +57,8 @@ class ConfigPipeline:
 
 @dataclass(frozen=True)
 class ConfigSimulacion:
-    seed: int = 42
-    n_años: int = 500
+    n_anios: int = 50
+    n_años: int = 50
     estrategias: tuple[str, ...] = (
         "prioridad_energia",
         "prioridad_riego",

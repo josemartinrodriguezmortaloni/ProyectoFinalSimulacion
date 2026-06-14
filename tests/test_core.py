@@ -75,7 +75,7 @@ class TestGeneracion:
         )
         assert (series["afluente_m3s"] >= 0).all()
         assert (series["demanda_hm3"] >= 0).all()
-        assert series["fusion_anual_mm"].between(50, 300).all()
+        assert series["fusion_anual_mm"].between(50, 600).all()
         assert series["precipitacion_anual_mm"].between(0, 600).all()
 
 

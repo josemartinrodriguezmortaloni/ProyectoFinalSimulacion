@@ -96,7 +96,7 @@ class RepositorioArtefactos:
     # --------------------------------------------------------- manifest
     def crear_corrida(self, manifest: ManifestCorrida) -> Path:
         directorio = self.raiz / manifest.id_corrida
-        directorio.mkdir(parents=True, exist_ok=False)
+        directorio.mkdir(parents=True, exist_ok=True)
         self._escribir_json(directorio / ARCHIVO_MANIFEST, asdict(manifest))
         return directorio
 

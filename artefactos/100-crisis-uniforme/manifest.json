@@ -2,7 +2,7 @@
   "id_corrida": "100-crisis-uniforme",
   "seed": 100,
   "n_anios": 500,
-  "creado": "2026-06-13T17:10:41",
+  "creado": "2026-06-14T16:49:55",
   "asignacion": "uniforme",
   "horizonte_meses": 120,
   "proporciones_diques": {
@@ -11,7 +11,7 @@
     "El Nihuil": 0.15,
     "El Carrizal": 0.12
   },
-  "ruta_mdl": "modeloDinamico\\ProyectoGlobalSimulacion(PrimerModeloTerminado).mdl",
-  "hash_mdl": "e9ac0232e4bf94c4",
+  "ruta_mdl": "modeloDinamico\\ProyectoGlobalSimulacion.mdl",
+  "hash_mdl": "73ea5944dc0e125e",
   "version_pysd": "3.14.3"
 }

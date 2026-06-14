@@ -127,7 +127,7 @@ def _cmd_pipeline(args: argparse.Namespace) -> int:
     repo = _repo(config)
 
     print("=" * 70)
-    print("PIPELINE: generar → validar → convertir → simular → analizar")
+    print("PIPELINE: generar -> validar -> convertir -> simular -> analizar")
     print("=" * 70)
 
     escenario = getattr(args, 'escenario', 'normal')

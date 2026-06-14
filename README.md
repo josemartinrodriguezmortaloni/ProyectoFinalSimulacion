@@ -64,12 +64,33 @@ uv sync          # instala dependencias (incluye pysd) y el paquete
 ### Pipeline completo (recomendado)
 
 ```bash
-uv run simular pipeline --seed 42
+uv run simular pipeline --seed 100 --anios 500
 ```
 
-Corre las 5 fases encadenadas y deja los artefactos en `artefactos/{seed}_{timestamp}/`.
+Corre las 5 fases encadenadas y deja los artefactos en `artefactos/{id_corrida}/`.
 
-Opciones: `--anios 500` (años generados), `--asignacion uniforme|estacional`, `--horizonte-meses 120` (debe coincidir con el FINAL TIME del `.mdl`).
+Opciones disponibles para reproducir los escenarios del informe:
+- `--anios 500` (años generados, usar 500 para mayor potencia estadística)
+- `--asignacion uniforme|estacional` (política de erogación)
+- `--escenario normal|crisis|sequia_total|el_nino` (régimen climático)
+- `--horizonte-meses 120` (debe coincidir con el FINAL TIME del `.mdl`)
+
+#### Tabla de Comandos para los 8 Escenarios Evaluados
+
+Para reproducir exactamente los 8 escenarios que nutren las conclusiones del informe, podés copiar y pegar los siguientes comandos. Todos utilizan 500 años y la semilla 100 para garantizar la validación estadística y la consistencia de los datos.
+
+| Régimen Climático | Asignación Temporal | Comando a ejecutar |
+| :--- | :--- | :--- |
+| **Normal** | Uniforme | `uv run simular pipeline --seed 100 --anios 500 --escenario normal --asignacion uniforme` |
+| **Normal** | Estacional | `uv run simular pipeline --seed 100 --anios 500 --escenario normal --asignacion estacional` |
+| **El Niño** | Uniforme | `uv run simular pipeline --seed 100 --anios 500 --escenario el_nino --asignacion uniforme` |
+| **El Niño** | Estacional | `uv run simular pipeline --seed 100 --anios 500 --escenario el_nino --asignacion estacional` |
+| **Crisis Hídrica** | Uniforme | `uv run simular pipeline --seed 100 --anios 500 --escenario crisis --asignacion uniforme` |
+| **Crisis Hídrica** | Estacional | `uv run simular pipeline --seed 100 --anios 500 --escenario crisis --asignacion estacional` |
+| **Sequía Total** | Uniforme | `uv run simular pipeline --seed 100 --anios 500 --escenario sequia_total --asignacion uniforme` |
+| **Sequía Total** | Estacional | `uv run simular pipeline --seed 100 --anios 500 --escenario sequia_total --asignacion estacional` |
+
+*Luego de correr los escenarios que desees, podés ejecutar `uv run simular analizar --todas` para generar el `ranking_global.csv`.*
 
 ### Fases individuales
 

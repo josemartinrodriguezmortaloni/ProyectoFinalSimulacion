@@ -1,12 +1,12 @@
 """
-Python model 'ProyectoGlobalSimulacion(PrimerModeloTerminado).py'
+Python model 'ProyectoGlobalSimulacion(PruebaCaudalReguladoDOS).py'
 Translated using PySD
 """
 
 from pathlib import Path
 import numpy as np
 
-from pysd.py_backend.functions import modulo, if_then_else
+from pysd.py_backend.functions import if_then_else, modulo
 from pysd.py_backend.statefuls import Integ
 from pysd import Component
 
@@ -99,13 +99,128 @@ def time_step():
 
 
 @component.add(
+    name="Potrerillos Caudal Regulado",
+    comp_type="Auxiliary",
+    comp_subtype="Normal",
+    depends_on={
+        "potrerillos_disponible": 1,
+        "entrada_agua_potrerillos": 1,
+        "potrerillos_porcentaje_capacidad": 1,
+        "potrerillos_demanda_riego": 1,
+    },
+)
+def potrerillos_caudal_regulado():
+    """
+    Embalse en 65% (objetivo): libera exactamente el caudal entrante Embalse en 90% (muy lleno): libera hasta 50 hm³ extra para hacer espacio Embalse en 40% (bajo): libera hasta 50 hm³ menos para conservar agua
+    """
+    return float(
+        np.minimum(
+            potrerillos_disponible(),
+            float(
+                np.maximum(
+                    potrerillos_demanda_riego(),
+                    entrada_agua_potrerillos()
+                    + (potrerillos_porcentaje_capacidad() - 0.65) * 200,
+                )
+            ),
+        )
+    )
+
+
+@component.add(
+    name="Nihuil Caudal Regulado",
+    comp_type="Auxiliary",
+    comp_subtype="Normal",
+    depends_on={
+        "nihuil_disponible": 1,
+        "nihuil_demanda_riego": 1,
+        "nihuil_porcentaje_capacidad": 1,
+        "nihuil_entrada_agua": 1,
+    },
+)
+def nihuil_caudal_regulado():
+    """
+    Embalse en 65% (objetivo): libera exactamente el caudal entrante Embalse en 90% (muy lleno): libera hasta 50 hm³ extra para hacer espacio Embalse en 40% (bajo): libera hasta 50 hm³ menos para conservar agua
+    """
+    return float(
+        np.minimum(
+            nihuil_disponible(),
+            float(
+                np.maximum(
+                    nihuil_demanda_riego(),
+                    nihuil_entrada_agua() + (nihuil_porcentaje_capacidad() - 0.65) * 30,
+                )
+            ),
+        )
+    )
+
+
+@component.add(
+    name="Agua Del Toro Caudal Regulado",
+    comp_type="Auxiliary",
+    comp_subtype="Normal",
+    depends_on={
+        "agua_del_toro_disponible": 1,
+        "agua_del_toro_entrada_agua": 1,
+        "agua_del_toro_demanda_riego": 1,
+        "agua_del_toro_porcentaje_capacidad": 1,
+    },
+)
+def agua_del_toro_caudal_regulado():
+    """
+    Embalse en 65% (objetivo): libera exactamente el caudal entrante Embalse en 90% (muy lleno): libera hasta 50 hm³ extra para hacer espacio Embalse en 40% (bajo): libera hasta 50 hm³ menos para conservar agua
+    """
+    return float(
+        np.minimum(
+            agua_del_toro_disponible(),
+            float(
+                np.maximum(
+                    agua_del_toro_demanda_riego(),
+                    agua_del_toro_entrada_agua()
+                    + (agua_del_toro_porcentaje_capacidad() - 0.65) * 40,
+                )
+            ),
+        )
+    )
+
+
+@component.add(
+    name="Carrizal Caudal Regulado",
+    comp_type="Auxiliary",
+    comp_subtype="Normal",
+    depends_on={
+        "carrizal_disponible": 1,
+        "carrizal_porcentaje_capacidad": 1,
+        "carrizal_entrada_agua": 1,
+        "carrizal_demanda_riego": 1,
+    },
+)
+def carrizal_caudal_regulado():
+    """
+    Embalse en 65% (objetivo): libera exactamente el caudal entrante Embalse en 90% (muy lleno): libera hasta 50 hm³ extra para hacer espacio Embalse en 40% (bajo): libera hasta 50 hm³ menos para conservar agua
+    """
+    return float(
+        np.minimum(
+            carrizal_disponible(),
+            float(
+                np.maximum(
+                    carrizal_demanda_riego(),
+                    carrizal_entrada_agua()
+                    + (carrizal_porcentaje_capacidad() - 0.65) * 25,
+                )
+            ),
+        )
+    )
+
+
+@component.add(
     name="Salida Riego Potre",
     comp_type="Auxiliary",
     comp_subtype="Normal",
     depends_on={
         "potrerillos_demanda_riego": 1,
-        "potrerillos_caudal_regulado": 1,
         "potrerillos_prioridad_energia": 1,
+        "potrerillos_caudal_regulado": 1,
     },
 )
 def salida_riego_potre():
@@ -137,61 +252,6 @@ def agua_del_toro_salida_energia():
 
 
 @component.add(
-    name="Agua Del Toro Caudal Regulado",
-    comp_type="Auxiliary",
-    comp_subtype="Normal",
-    depends_on={
-        "agua_del_toro_disponible": 1,
-        "agua_del_toro_porcentaje_capacidad": 1,
-        "agua_del_toro_entrada_agua": 1,
-    },
-)
-def agua_del_toro_caudal_regulado():
-    """
-    Embalse en 65% (objetivo): libera exactamente el caudal entrante Embalse en 90% (muy lleno): libera hasta 50 hm³ extra para hacer espacio Embalse en 40% (bajo): libera hasta 50 hm³ menos para conservar agua
-    """
-    return float(
-        np.minimum(
-            agua_del_toro_disponible(),
-            float(
-                np.maximum(
-                    0,
-                    agua_del_toro_entrada_agua()
-                    + (agua_del_toro_porcentaje_capacidad() - 0.65) * 40,
-                )
-            ),
-        )
-    )
-
-
-@component.add(
-    name="Nihuil Caudal Regulado",
-    comp_type="Auxiliary",
-    comp_subtype="Normal",
-    depends_on={
-        "nihuil_disponible": 1,
-        "nihuil_porcentaje_capacidad": 1,
-        "nihuil_entrada_agua": 1,
-    },
-)
-def nihuil_caudal_regulado():
-    """
-    Embalse en 65% (objetivo): libera exactamente el caudal entrante Embalse en 90% (muy lleno): libera hasta 50 hm³ extra para hacer espacio Embalse en 40% (bajo): libera hasta 50 hm³ menos para conservar agua
-    """
-    return float(
-        np.minimum(
-            nihuil_disponible(),
-            float(
-                np.maximum(
-                    0,
-                    nihuil_entrada_agua() + (nihuil_porcentaje_capacidad() - 0.65) * 30,
-                )
-            ),
-        )
-    )
-
-
-@component.add(
     name="Salida Energia Potrerillos",
     units="hm3/mes",
     comp_type="Auxiliary",
@@ -203,34 +263,6 @@ def salida_energia_potrerillos():
     Agua turbinada en la central hidroeléctrica de Potrerillos (315 MW instalados). Es lo que queda disponible después de satisfacer riego, limitado por la fracción de prioridad energética.
     """
     return float(np.maximum(0, potrerillos_caudal_regulado() - salida_riego_potre()))
-
-
-@component.add(
-    name="Potrerillos Caudal Regulado",
-    comp_type="Auxiliary",
-    comp_subtype="Normal",
-    depends_on={
-        "potrerillos_disponible": 1,
-        "potrerillos_porcentaje_capacidad": 1,
-        "entrada_agua_potrerillos": 1,
-    },
-)
-def potrerillos_caudal_regulado():
-    """
-    Embalse en 65% (objetivo): libera exactamente el caudal entrante Embalse en 90% (muy lleno): libera hasta 50 hm³ extra para hacer espacio Embalse en 40% (bajo): libera hasta 50 hm³ menos para conservar agua
-    """
-    return float(
-        np.minimum(
-            potrerillos_disponible(),
-            float(
-                np.maximum(
-                    0,
-                    entrada_agua_potrerillos()
-                    + (potrerillos_porcentaje_capacidad() - 0.65) * 200,
-                )
-            ),
-        )
-    )
 
 
 @component.add(
@@ -288,34 +320,6 @@ def carrizal_salida_riego():
 
 
 @component.add(
-    name="Carrizal Caudal Regulado",
-    comp_type="Auxiliary",
-    comp_subtype="Normal",
-    depends_on={
-        "carrizal_disponible": 1,
-        "carrizal_entrada_agua": 1,
-        "carrizal_porcentaje_capacidad": 1,
-    },
-)
-def carrizal_caudal_regulado():
-    """
-    Embalse en 65% (objetivo): libera exactamente el caudal entrante Embalse en 90% (muy lleno): libera hasta 50 hm³ extra para hacer espacio Embalse en 40% (bajo): libera hasta 50 hm³ menos para conservar agua
-    """
-    return float(
-        np.minimum(
-            carrizal_disponible(),
-            float(
-                np.maximum(
-                    0,
-                    carrizal_entrada_agua()
-                    + (carrizal_porcentaje_capacidad() - 0.65) * 25,
-                )
-            ),
-        )
-    )
-
-
-@component.add(
     name="Entrada Agua Potrerillos",
     units="hm3/mes",
     comp_type="Auxiliary",
@@ -337,8 +341,8 @@ def entrada_agua_potrerillos():
     comp_subtype="Normal",
     depends_on={
         "nihuil_demanda_riego": 1,
-        "nihuil_caudal_regulado": 1,
         "nihuil_prioridad_energia": 1,
+        "nihuil_caudal_regulado": 1,
     },
 )
 def nihuil_salida_riego():

@@ -37,6 +37,7 @@ COLUMNAS_RESULTADOS: tuple[str, ...] = (
     "Carrizal Generacion GWh",
     "Nihuil Generacion GWh",
     "Agua Del Toro Generacion GWh",
+    "Crisis Hidrica",
     "Conviene Riego",
     "Conviene Energia",
 )
